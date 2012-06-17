@@ -152,9 +152,12 @@ namespace IronScheme.VisualStudio
 
       var port = new TextSnapshotToTextReader(snapshot);
 
-      var result = "(parse-imports {0})".Eval(port);
+      var result = "(read-file {0})".Eval(port);
+      var imports = "(read-imports {0})".Eval(result);
+      var env = "(environment {0})".Eval(imports);
+      var symbols = "(environment-bindings {0})".Eval(env);
 
-      Console.WriteLine(result);
+      Console.WriteLine(symbols);
 
 
     }

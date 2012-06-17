@@ -1,7 +1,8 @@
 ﻿
 (library (visualstudio)
   (export 
-    read-file)
+    read-file
+    read-imports)
   (import 
     (ironscheme)
     (ironscheme reader)
@@ -12,4 +13,9 @@
       (let ((e (read-annotated port)))
         (if (eof-object? e)
             (reverse a)
-            (cons e a))))))
+            (cons e a)))))
+            
+  (define (read-imports content)
+    '(rnrs))      
+            
+)

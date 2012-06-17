@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Windows.Media;
@@ -11,6 +12,8 @@ using Microsoft.VisualStudio.Language.StandardClassification;
 using System.Runtime.CompilerServices;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Shell;
+using IronScheme.Runtime;
+using Microsoft.Scripting;
 
 namespace IronScheme.VisualStudio
 {
@@ -62,6 +65,15 @@ namespace IronScheme.VisualStudio
     ITagAggregator<SchemeTag> _aggregator;
     ITextBuffer _buffer;
     IDictionary<Tokens, IClassificationType> _schemeTokenTypes = new Dictionary<Tokens, IClassificationType>();
+    private IClassificationType syntax, procedure;
+    static Dictionary<string, bool> bindings = new Dictionary<string, bool>(700);
+
+    static ClassificationTagger()
+    {
+      var s = SymbolTable.StringToObject("syntax");
+      var b = "(environment-bindings (environment '(ironscheme)))".Eval();
+      bindings = ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), x => ((Cons)x).cdr == s);
+    }
 
     internal ClassificationTagger(ITextBuffer buffer, IBufferTagAggregatorFactoryService aggregatorFactory, IClassificationTypeRegistryService registry)
     {
@@ -76,6 +88,9 @@ namespace IronScheme.VisualStudio
       _schemeTokenTypes[Tokens.STRING] = registry.GetClassificationType(PredefinedClassificationTypeNames.String);
       _schemeTokenTypes[Tokens.SYMBOL] = registry.GetClassificationType(PredefinedClassificationTypeNames.Identifier);
       _schemeTokenTypes[Tokens.MLSTRING] = registry.GetClassificationType(PredefinedClassificationTypeNames.String);
+
+      syntax = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
+      procedure = registry.GetClassificationType("line number");
 
       _aggregator.BatchedTagsChanged += _aggregator_BatchedTagsChanged;
     }
@@ -98,6 +113,28 @@ namespace IronScheme.VisualStudio
         if (_schemeTokenTypes.ContainsKey(tagSpan.Tag.type))
         {
           var tagSpans = tagSpan.Span.GetSpans(spans[0].Snapshot)[0];
+          if (tagSpan.Tag.type == Tokens.SYMBOL)
+          {
+            var text = tagSpans.GetText();
+            bool val;
+            if (bindings.TryGetValue(text, out val))
+            {
+              if (val)
+              {
+                yield return
+                  new TagSpan<ClassificationTag>(tagSpans,
+                                                 new ClassificationTag(syntax));
+              }
+              else
+              {
+                yield return
+                  new TagSpan<ClassificationTag>(tagSpans,
+                                                 new ClassificationTag(procedure));
+              }
+              continue;
+            }
+          }
+          
           yield return
               new TagSpan<ClassificationTag>(tagSpans,
                                          new ClassificationTag(_schemeTokenTypes[tagSpan.Tag.type]));
