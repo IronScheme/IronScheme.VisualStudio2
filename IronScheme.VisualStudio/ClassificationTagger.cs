@@ -65,14 +65,19 @@ namespace IronScheme.VisualStudio
     ITagAggregator<SchemeTag> _aggregator;
     ITextBuffer _buffer;
     IDictionary<Tokens, IClassificationType> _schemeTokenTypes = new Dictionary<Tokens, IClassificationType>();
-    private IClassificationType syntax, procedure;
-    static Dictionary<string, bool> bindings = new Dictionary<string, bool>(700);
+    IClassificationType syntax, procedure;
+    static readonly Dictionary<string, bool> bindings = new Dictionary<string, bool>(1000);
+    static readonly HashSet<string> library_keywords = new HashSet<string>(new string[] { "library", "export", "import", "only", "except", "rename", "prefix" });
 
     static ClassificationTagger()
     {
       var s = SymbolTable.StringToObject("syntax");
       var b = "(environment-bindings (environment '(ironscheme)))".Eval();
       bindings = ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), x => ((Cons)x).cdr == s);
+
+      "(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"d:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\");
+      //"(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"c:\dev\IronScheme\IronScheme.Console\bin\Release\");
+      "(import (visualstudio))".Eval();
     }
 
     internal ClassificationTagger(ITextBuffer buffer, IBufferTagAggregatorFactoryService aggregatorFactory, IClassificationTypeRegistryService registry)
@@ -92,22 +97,33 @@ namespace IronScheme.VisualStudio
       syntax = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
       procedure = registry.GetClassificationType("line number");
 
+      _buffer.Properties["SchemeBindings"] = bindings;
+
       _aggregator.BatchedTagsChanged += _aggregator_BatchedTagsChanged;
+
+      _buffer.Properties["SchemeClassifier"] = this;
+    }
+
+    internal void RaiseTagsChanged(SnapshotSpan span)
+    {
+      var e = new SnapshotSpanEventArgs(span);
+      if (TagsChanged != null)
+      {
+        TagsChanged(this, e);
+      }
     }
 
     void _aggregator_BatchedTagsChanged(object sender, BatchedTagsChangedEventArgs e)
     {
       foreach (var span in e.Spans)
       {
-        if (TagsChanged != null)
-        {
-          TagsChanged(this, new SnapshotSpanEventArgs(span.GetSpans(_buffer)[0]));
-        }
+        RaiseTagsChanged(span.GetSpans(_buffer)[0]);
       }
     }
 
     public IEnumerable<ITagSpan<ClassificationTag>> GetTags(NormalizedSnapshotSpanCollection spans)
     {
+      var bindings = _buffer.Properties["SchemeBindings"] as Dictionary<string, bool>;
       foreach (var tagSpan in this._aggregator.GetTags(spans))
       {
         if (_schemeTokenTypes.ContainsKey(tagSpan.Tag.type))
@@ -121,23 +137,22 @@ namespace IronScheme.VisualStudio
             {
               if (val)
               {
-                yield return
-                  new TagSpan<ClassificationTag>(tagSpans,
-                                                 new ClassificationTag(syntax));
+                yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(syntax));
               }
               else
               {
-                yield return
-                  new TagSpan<ClassificationTag>(tagSpans,
-                                                 new ClassificationTag(procedure));
+                yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(procedure));
               }
+              continue;
+            }
+            if (library_keywords.Contains(text))
+            {
+              yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(syntax));
               continue;
             }
           }
           
-          yield return
-              new TagSpan<ClassificationTag>(tagSpans,
-                                         new ClassificationTag(_schemeTokenTypes[tagSpan.Tag.type]));
+          yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(_schemeTokenTypes[tagSpan.Tag.type]));
         }
       }
     }

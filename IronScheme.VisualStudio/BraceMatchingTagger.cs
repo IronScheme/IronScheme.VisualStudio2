@@ -91,7 +91,7 @@ namespace IronScheme.VisualStudio
         }
         if (pair.End.Snapshot != currentChar.Snapshot)
         {
-          pair.End = pair.End.TranslateTo(currentChar.Snapshot, SpanTrackingMode.EdgeNegative);
+          pair.End = pair.End.TranslateTo(currentChar.Snapshot, SpanTrackingMode.EdgePositive);
         }
 
         if (pair.Start.Contains(currentChar) || pair.End.Contains(currentChar))

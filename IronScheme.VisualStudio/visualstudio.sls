@@ -13,9 +13,12 @@
       (let ((e (read-annotated port)))
         (if (eof-object? e)
             (reverse a)
-            (cons e a)))))
+            (f (cons e a))))))
             
   (define (read-imports content)
-    '(rnrs))      
+    (let ((c (car content)))
+      (if (= 1 (length content))
+          (cdr (cadddr (annotation-stripped c)))
+          (cdr (annotation-stripped c)))))
             
 )

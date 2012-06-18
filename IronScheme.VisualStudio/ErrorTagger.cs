@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Linq;
 using System.Windows.Media;
 using IronScheme.Compiler;
 using Microsoft.VisualStudio.Text;
@@ -13,13 +14,15 @@ using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Shell;
 using IronScheme.Runtime;
 using System.IO;
+using Microsoft.Scripting;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace IronScheme.VisualStudio
 {
-  [Export(typeof(ITaggerProvider))]
+  [Export(typeof(IViewTaggerProvider))]
   [ContentType("scheme")]
   [TagType(typeof(ErrorTag))]
-  class ErrorTaggerProvider : ITaggerProvider
+  class ErrorTaggerProvider : IViewTaggerProvider
   {
     [Import]
     internal IBufferTagAggregatorFactoryService aggregatorFactory = null;
@@ -30,10 +33,10 @@ namespace IronScheme.VisualStudio
     [Import]
     internal ITextDocumentFactoryService textDocumentFactory = null;
 
-    public ITagger<T> CreateTagger<T>(ITextBuffer buffer) where T : ITag
+    public ITagger<T> CreateTagger<T>(ITextView textView, ITextBuffer buffer) where T : ITag
     {
       return buffer.Properties.GetOrCreateSingletonProperty(
-        () => new ErrorTagger(buffer, aggregatorFactory, _serviceProvider, textDocumentFactory) as ITagger<T>);
+        () => new ErrorTagger(buffer, aggregatorFactory, _serviceProvider, textDocumentFactory, textView) as ITagger<T>);
     }
   }
 
@@ -45,6 +48,8 @@ namespace IronScheme.VisualStudio
     public readonly static object BraceKey = new object();
   }
 
+  class Square : SnapshotSpanPair { }
+
   class ErrorTagger : ITagger<ErrorTag>, IDisposable
   {
     const string FILENAME = "visualstudio.sls";
@@ -52,11 +57,14 @@ namespace IronScheme.VisualStudio
     ITextBuffer _buffer;
     ErrorListProvider _errorProvider;
     ITextDocument _document;
+    ITextView _view;
+    readonly List<TagSpan<ErrorTag>> brace_errors = new List<TagSpan<ErrorTag>>();
 
     public ErrorTagger(ITextBuffer buffer, IBufferTagAggregatorFactoryService aggregatorFactory,
-      IServiceProvider svcp, ITextDocumentFactoryService textDocumentFactory)
+      IServiceProvider svcp, ITextDocumentFactoryService textDocumentFactory, ITextView view)
     {
       _buffer = buffer;
+      _view = view;
       _aggregator = aggregatorFactory.CreateTagAggregator<SchemeTag>(buffer);
 
       textDocumentFactory.TryGetTextDocument(_buffer, out _document);
@@ -72,10 +80,6 @@ namespace IronScheme.VisualStudio
         }
       }
 
-      "(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"d:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\");
-      "(import (visualstudio))".Eval();
-
-
       BufferIdleEventUtil.AddBufferIdleEventListener(_buffer, ReparseFile);
     }
 
@@ -88,6 +92,21 @@ namespace IronScheme.VisualStudio
           var tagSpans = tagSpan.Span.GetSpans(spans[0].Snapshot)[0];
           var errtag = new ErrorTag(PredefinedErrorTypeNames.SyntaxError, tagSpan.Tag.ErrorMessage);
           yield return new TagSpan<ErrorTag>(tagSpans, errtag);
+        }
+      }
+
+      foreach (var err in brace_errors)
+      {
+        if (err.Span.Snapshot != spans[0].Snapshot)
+        {
+          brace_errors.Clear();
+          break;
+        }
+        else if (err.Span.OverlapsWith(spans[0]))
+        {
+          yield return err;
+          brace_errors.Remove(err);
+          break;
         }
       }
     }
@@ -110,6 +129,8 @@ namespace IronScheme.VisualStudio
 
       _errorProvider.Tasks.Clear();
 
+      brace_errors.Clear();
+
       var bracestack = new Stack<SnapshotSpanPair>();
       var bracelist = new List<SnapshotSpanPair>();
 
@@ -120,11 +141,19 @@ namespace IronScheme.VisualStudio
         switch (tagSpan.Tag.type)
         {
           case Tokens.error:
-            var errtag = new ErrorTag(PredefinedErrorTypeNames.SyntaxError, tagSpan.Tag.ErrorMessage);
-            AddErrorTask(span, errtag);
-            break;
-          case Tokens.LBRACE:
+            {
+              var errtag = new ErrorTag(PredefinedErrorTypeNames.SyntaxError, tagSpan.Tag.ErrorMessage);
+              AddErrorTask(span, errtag);
+              break;
+            }
           case Tokens.LBRACK:
+            {
+              var tup = new Square { Start = span };
+              bracestack.Push(tup);
+              bracelist.Add(tup);
+              break;
+            }
+          case Tokens.LBRACE:
           case Tokens.BYTEVECTORLBRACE:
           case Tokens.VECTORLBRACE:
             {
@@ -139,7 +168,23 @@ namespace IronScheme.VisualStudio
               if (bracestack.Count > 0)
               {
                 var tup = bracestack.Pop();
-                tup.End = span;
+                if ((tagSpan.Tag.type == Tokens.RBRACK && !(tup is Square)) || (tagSpan.Tag.type == Tokens.RBRACE && (tup is Square)))
+                {
+                  //bracestack.Push(tup);
+                  var errtag = new ErrorTag(PredefinedErrorTypeNames.SyntaxError, "Missing opening parenthesis");
+                  AddErrorTask(span, errtag);
+                  brace_errors.Add(new TagSpan<ErrorTag>(span, errtag));
+                }
+                else
+                {
+                  tup.End = span;
+                }
+              }
+              else
+              {
+                var errtag = new ErrorTag(PredefinedErrorTypeNames.SyntaxError, "Missing opening parenthesis");
+                AddErrorTask(span, errtag);
+                brace_errors.Add(new TagSpan<ErrorTag>(span, errtag));
               }
               break;
             }
@@ -148,17 +193,46 @@ namespace IronScheme.VisualStudio
 
       // maybe add check for balanced braces?
 
+      while (bracestack.Count > 0)
+      {
+        var bs = bracestack.Pop();
+        var errtag = new ErrorTag(PredefinedErrorTypeNames.SyntaxError, "Missing closing parenthesis");
+        AddErrorTask(bs.Start, errtag);
+        brace_errors.Add(new TagSpan<ErrorTag>(bs.Start, errtag));
+      }
+
       _buffer.Properties[SnapshotSpanPair.BraceKey] = bracelist;
 
-      var port = new TextSnapshotToTextReader(snapshot);
+      if (_errorProvider.Tasks.Count == 0)
+      {
+        var port = new TextSnapshotToTextReader(snapshot);
 
-      var result = "(read-file {0})".Eval(port);
-      var imports = "(read-imports {0})".Eval(result);
-      var env = "(environment {0})".Eval(imports);
-      var symbols = "(environment-bindings {0})".Eval(env);
+        var result = "(read-file {0})".Eval(port);
+        var imports = "(read-imports {0})".Eval(result);
+        var env = "(apply environment {0})".Eval(imports);
+        var b = "(environment-bindings {0})".Eval(env);
 
-      Console.WriteLine(symbols);
+        var s = SymbolTable.StringToObject("syntax");
+        var bindings = ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), x => ((Cons)x).cdr == s);
 
+        _buffer.Properties["SchemeBindings"] = bindings;
+
+        var lines = _view.TextViewLines.ToArray();
+        
+        var start = lines[0].Start;
+        var end = lines[lines.Length - 1].End;
+
+        var span = new SnapshotSpan(start, end);
+        
+        // notifiy classifier somehow
+        var classifier = _buffer.Properties["SchemeClassifier"] as ClassificationTagger;
+        classifier.RaiseTagsChanged(span);
+      }
+
+      if (TagsChanged != null)
+      {
+        TagsChanged(this, new SnapshotSpanEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length)));
+      }
 
     }
 
