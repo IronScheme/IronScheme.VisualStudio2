@@ -89,7 +89,7 @@ namespace IronScheme.VisualStudio
       {
         var spank = span;
 
-        while (spank.Start < span.End)
+        while (spank.Start <= span.End)
         {
           var thisline = spank.Start.GetContainingLine();
           var linenr = thisline.LineNumber;

@@ -14,6 +14,7 @@ using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Shell;
 using IronScheme.Runtime;
 using Microsoft.Scripting;
+using System.IO;
 
 namespace IronScheme.VisualStudio
 {
@@ -71,12 +72,24 @@ namespace IronScheme.VisualStudio
 
     static ClassificationTagger()
     {
-      var s = SymbolTable.StringToObject("syntax");
-      var b = "(environment-bindings (environment '(ironscheme)))".Eval();
-      bindings = ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), x => ((Cons)x).cdr == s);
+      const string FILENAME = "visualstudio.sls";
 
-      "(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"d:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\");
-      //"(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"c:\dev\IronScheme\IronScheme.Console\bin\Release\");
+      //if (!File.Exists(Path.Combine(Builtins.ApplicationDirectory, FILENAME)))
+      {
+        var stream = typeof(ErrorTagger).Assembly.GetManifestResourceStream("IronScheme.VisualStudio." + FILENAME);
+        using (var file = File.Create(Path.Combine(Builtins.ApplicationDirectory, FILENAME)))
+        {
+          stream.CopyTo(file);
+        }
+      }
+
+      var s = SymbolTable.StringToObject("syntax");
+      var p = SymbolTable.StringToObject("procedure");
+      var b = "(environment-bindings (environment '(ironscheme)))".Eval();
+      bindings = ((Cons)b).Where(x => ((Cons)x).cdr == s || ((Cons)x).cdr == p).ToDictionary(x => (((Cons)x).car).ToString(), x => ((Cons)x).cdr == s);
+
+      //"(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"d:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\");
+      "(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"c:\dev\IronScheme\IronScheme.Console\bin\Release\");
       "(import (visualstudio))".Eval();
     }
 

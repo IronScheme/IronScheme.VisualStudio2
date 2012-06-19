@@ -52,7 +52,7 @@ namespace IronScheme.VisualStudio
 
   class ErrorTagger : ITagger<ErrorTag>, IDisposable
   {
-    const string FILENAME = "visualstudio.sls";
+    
     ITagAggregator<SchemeTag> _aggregator;
     ITextBuffer _buffer;
     ErrorListProvider _errorProvider;
@@ -71,14 +71,6 @@ namespace IronScheme.VisualStudio
 
       _errorProvider = new ErrorListProvider(svcp);
 
-      //if (!File.Exists(Path.Combine(Builtins.ApplicationDirectory, FILENAME)))
-      {
-        var s = typeof (ErrorTagger).Assembly.GetManifestResourceStream("IronScheme.VisualStudio." + FILENAME);
-        using (var file = File.Create(Path.Combine(Builtins.ApplicationDirectory, FILENAME)))
-        {
-          s.CopyTo(file);
-        }
-      }
 
       BufferIdleEventUtil.AddBufferIdleEventListener(_buffer, ReparseFile);
     }
@@ -210,10 +202,14 @@ namespace IronScheme.VisualStudio
         var result = "(read-file {0})".Eval(port);
         var imports = "(read-imports {0})".Eval(result);
         var env = "(apply environment {0})".Eval(imports);
+
+        _buffer.Properties["SchemeEnvironment"] = env;
+
         var b = "(environment-bindings {0})".Eval(env);
 
         var s = SymbolTable.StringToObject("syntax");
-        var bindings = ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), x => ((Cons)x).cdr == s);
+        var p = SymbolTable.StringToObject("procedure");
+        var bindings = ((Cons)b).Where(x => ((Cons)x).cdr == s || ((Cons)x).cdr == p).ToDictionary(x => (((Cons)x).car).ToString(), x => ((Cons)x).cdr == s);
 
         _buffer.Properties["SchemeBindings"] = bindings;
 

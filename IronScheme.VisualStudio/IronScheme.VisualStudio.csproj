@@ -102,6 +102,8 @@
     <Compile Include="BufferIdleEventUtil.cs" />
     <Compile Include="ClassificationTagger.cs" />
     <Compile Include="ErrorTagger.cs" />
+    <Compile Include="QuickInfo.cs" />
+    <Compile Include="QuickInfoSource.cs" />
     <Compile Include="SchemeCompletionHandlerProvider.cs" />
     <Compile Include="SchemeCompletionSource.cs" />
     <Compile Include="SchemeTagger.cs" />
@@ -112,6 +114,10 @@
       <SubType>Designer</SubType>
     </None>
     <EmbeddedResource Include="visualstudio.sls" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\CodeField.png" />
+    <EmbeddedResource Include="Resources\CodeMethod.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />

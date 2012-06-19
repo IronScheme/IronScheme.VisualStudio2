@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
@@ -16,140 +17,173 @@ namespace IronScheme.VisualStudio
   [Export(typeof(IVsTextViewCreationListener))]
   [Name("token completion handler")]
   [ContentType("scheme")]
-  [TextViewRole(PredefinedTextViewRoles.Editable)]
+  [TextViewRole(PredefinedTextViewRoles.Interactive)]
   class SchemeCompletionHandlerProvider : IVsTextViewCreationListener
   {
     [Import]
-    internal IVsEditorAdaptersFactoryService AdapterService = null;
+    IVsEditorAdaptersFactoryService AdaptersFactory = null;
+
     [Import]
-    internal ICompletionBroker CompletionBroker { get; set; }
-    [Import]
-    internal SVsServiceProvider ServiceProvider { get; set; }
+    ICompletionBroker CompletionBroker = null;
 
     public void VsTextViewCreated(IVsTextView textViewAdapter)
     {
-      ITextView textView = AdapterService.GetWpfTextView(textViewAdapter);
-      if (textView == null)
-        return;
+      IWpfTextView view = AdaptersFactory.GetWpfTextView(textViewAdapter);
+      Debug.Assert(view != null);
 
-      Func<SchemeCompletionCommandHandler> createCommandHandler = delegate() { return new SchemeCompletionCommandHandler(textViewAdapter, textView, this); };
-      textView.Properties.GetOrCreateSingletonProperty(createCommandHandler);
+      SchemeCompletionCommandHandler filter = new SchemeCompletionCommandHandler(view, CompletionBroker);
+
+      IOleCommandTarget next;
+      textViewAdapter.AddCommandFilter(filter, out next);
+      filter.Next = next;
     }
   }
 
   class SchemeCompletionCommandHandler : IOleCommandTarget
   {
-    IOleCommandTarget m_nextCommandHandler;
-    ITextView m_textView;
-    SchemeCompletionHandlerProvider m_provider;
-    ICompletionSession m_session;
+    ICompletionSession _currentSession;
 
-    internal SchemeCompletionCommandHandler(IVsTextView textViewAdapter, ITextView textView, SchemeCompletionHandlerProvider provider)
+    public SchemeCompletionCommandHandler(IWpfTextView textView, ICompletionBroker broker)
     {
-      this.m_textView = textView;
-      this.m_provider = provider;
+      _currentSession = null;
 
-      //add the command to the command chain
-      textViewAdapter.AddCommandFilter(this, out m_nextCommandHandler);
+      TextView = textView;
+      Broker = broker;
     }
 
-    public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
+    public IWpfTextView TextView { get; private set; }
+    public ICompletionBroker Broker { get; private set; }
+    public IOleCommandTarget Next { get; set; }
+
+    private char GetTypeChar(IntPtr pvaIn)
     {
-      return m_nextCommandHandler.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+      return (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
     }
 
     public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
     {
-      if (VsShellUtilities.IsInAutomationFunction(m_provider.ServiceProvider))
-      {
-        return m_nextCommandHandler.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-      }
-      //make a copy of this so we can look at it after forwarding some commands
-      uint commandID = nCmdID;
-      char typedChar = char.MinValue;
-      //make sure the input is a char before getting it
-      if (pguidCmdGroup == VSConstants.VSStd2K && nCmdID == (uint)VSConstants.VSStd2KCmdID.TYPECHAR)
-      {
-        typedChar = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
-      }
-
-      //check for a commit character
-      if (nCmdID == (uint)VSConstants.VSStd2KCmdID.RETURN
-          || nCmdID == (uint)VSConstants.VSStd2KCmdID.TAB
-          || (char.IsWhiteSpace(typedChar) || char.IsPunctuation(typedChar)))
-      {
-        //check for a a selection
-        if (m_session != null && !m_session.IsDismissed)
-        {
-          //if the selection is fully selected, commit the current session
-          if (m_session.SelectedCompletionSet.SelectionStatus.IsSelected)
-          {
-            m_session.Commit();
-            //also, don't add the character to the buffer
-            return VSConstants.S_OK;
-          }
-          else
-          {
-            //if there is no selection, dismiss the session
-            m_session.Dismiss();
-          }
-        }
-      }
-
-      //pass along the command so the char is added to the buffer
-      int retVal = m_nextCommandHandler.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
       bool handled = false;
-      if (!typedChar.Equals(char.MinValue) && char.IsLetterOrDigit(typedChar))
+      bool updateFilter = false;
+      bool previousSessionActive = (_currentSession != null);
+      int hresult = VSConstants.S_OK;
+
+      // 1. Pre-process
+      if (pguidCmdGroup == VSConstants.VSStd2K)
       {
-        if (m_session == null || m_session.IsDismissed) // If there is no active session, bring up completion
+        switch ((VSConstants.VSStd2KCmdID)nCmdID)
         {
-          this.TriggerCompletion();
-          m_session.Filter();
+          case VSConstants.VSStd2KCmdID.AUTOCOMPLETE:
+          case VSConstants.VSStd2KCmdID.COMPLETEWORD:
+            handled = StartSession();
+            break;
+          case VSConstants.VSStd2KCmdID.RETURN:
+            handled = Complete(false);
+            break;
+          case VSConstants.VSStd2KCmdID.TAB:
+            handled = Complete(true);
+            break;
+          case VSConstants.VSStd2KCmdID.BACKSPACE:
+            // update the filter after processing the key
+            updateFilter = true;
+            break;
+          case VSConstants.VSStd2KCmdID.CANCEL:
+            handled = Cancel();
+            break;
         }
-        else    //the completion session is already active, so just filter
-        {
-          m_session.Filter();
-        }
-        handled = true;
       }
-      else if (commandID == (uint)VSConstants.VSStd2KCmdID.BACKSPACE   //redo the filter if there is a deletion
-          || commandID == (uint)VSConstants.VSStd2KCmdID.DELETE)
+
+      if (!handled)
       {
-        if (m_session != null && !m_session.IsDismissed)
-          m_session.Filter();
-        handled = true;
+        hresult = Next.Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+
+        // update the filter after processing the key
+        if (updateFilter)
+          Filter();
       }
-      if (handled) return VSConstants.S_OK;
-      return retVal;
+
+      if (ErrorHandler.Succeeded(hresult))
+      {
+        if (pguidCmdGroup == VSConstants.VSStd2K)
+        {
+          switch ((VSConstants.VSStd2KCmdID)nCmdID)
+          {
+            case VSConstants.VSStd2KCmdID.TYPECHAR:
+              if (_currentSession != null)
+                Filter();
+              break;
+          }
+        }
+      }
+
+      return hresult;
     }
 
-    private bool TriggerCompletion()
+    void Filter()
     {
-      //the caret must be in a non-projection location 
-      SnapshotPoint? caretPoint =
-      m_textView.Caret.Position.Point.GetPoint(
-      textBuffer => (!textBuffer.ContentType.IsOfType("projection")), PositionAffinity.Predecessor);
-      if (!caretPoint.HasValue)
-      {
+      if (_currentSession == null)
+        return;
+
+      _currentSession.SelectedCompletionSet.Filter();
+      _currentSession.SelectedCompletionSet.SelectBestMatch();
+      _currentSession.SelectedCompletionSet.Recalculate();
+    }
+
+    bool Cancel()
+    {
+      if (_currentSession == null)
         return false;
-      }
 
-      m_session = m_provider.CompletionBroker.CreateCompletionSession
-   (m_textView,
-          caretPoint.Value.Snapshot.CreateTrackingPoint(caretPoint.Value.Position, PointTrackingMode.Positive),
-          true);
-
-      //subscribe to the Dismissed event on the session 
-      m_session.Dismissed += this.OnSessionDismissed;
-      m_session.Start();
+      _currentSession.Dismiss();
 
       return true;
     }
 
-    void OnSessionDismissed(object sender, EventArgs e)
+    bool Complete(bool force)
     {
-      m_session.Dismissed -= this.OnSessionDismissed;
-      m_session = null;
+      if (_currentSession == null)
+        return false;
+
+      if (!_currentSession.SelectedCompletionSet.SelectionStatus.IsSelected && !force)
+      {
+        _currentSession.Dismiss();
+        return false;
+      }
+      else
+      {
+        _currentSession.Commit();
+        return true;
+      }
+    }
+
+    bool StartSession()
+    {
+      if (_currentSession != null)
+        return false;
+
+      SnapshotPoint caret = TextView.Caret.Position.BufferPosition;
+      ITextSnapshot snapshot = caret.Snapshot;
+
+      _currentSession = Broker.CreateCompletionSession(TextView, snapshot.CreateTrackingPoint(caret, PointTrackingMode.Positive), true);
+      _currentSession.Start();
+
+      _currentSession.Dismissed += (sender, args) => _currentSession = null;
+
+      return true;
+    }
+
+    public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
+    {
+      if (pguidCmdGroup == VSConstants.VSStd2K)
+      {
+        switch ((VSConstants.VSStd2KCmdID)prgCmds[0].cmdID)
+        {
+          case VSConstants.VSStd2KCmdID.AUTOCOMPLETE:
+          case VSConstants.VSStd2KCmdID.COMPLETEWORD:
+            prgCmds[0].cmdf = (uint)OLECMDF.OLECMDF_ENABLED | (uint)OLECMDF.OLECMDF_SUPPORTED;
+            return VSConstants.S_OK;
+        }
+      }
+      return Next.QueryStatus(pguidCmdGroup, cCmds, prgCmds, pCmdText);
     }
   }
 }

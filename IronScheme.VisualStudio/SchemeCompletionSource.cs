@@ -7,6 +7,8 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace IronScheme.VisualStudio
 {
@@ -15,6 +17,18 @@ namespace IronScheme.VisualStudio
     SchemeCompletionSourceProvider m_sourceProvider;
     ITextBuffer m_textBuffer;
     List<Completion> m_compList;
+    static ImageSource syntax_image, procedure_image;
+
+    static SchemeCompletionSource()
+    {
+      var ass = typeof(SchemeCompletionSource).Assembly;
+      var img = new PngBitmapDecoder(ass.GetManifestResourceStream("IronScheme.VisualStudio.Resources.CodeField.png"),
+        BitmapCreateOptions.None, BitmapCacheOption.Default);
+      syntax_image = img.Frames[0];
+      img = new PngBitmapDecoder(ass.GetManifestResourceStream("IronScheme.VisualStudio.Resources.CodeMethod.png"),
+        BitmapCreateOptions.None, BitmapCacheOption.Default);
+      procedure_image = img.Frames[0];
+    }
 
     public SchemeCompletionSource(SchemeCompletionSourceProvider sourceProvider, ITextBuffer textBuffer)
     {
@@ -24,28 +38,58 @@ namespace IronScheme.VisualStudio
 
     void ICompletionSource.AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets)
     {
-      List<string> strList = new List<string>();
+      ITextSnapshot snapshot = m_textBuffer.CurrentSnapshot;
+      SnapshotPoint? triggerPoint = session.GetTriggerPoint(snapshot);
+      if (triggerPoint == null)
+      {
+        return;
+      }
+      SnapshotPoint end = triggerPoint.Value;
+      SnapshotPoint start = end;
+      // go back to either a delimiter, a whitespace char or start of line.
+      while (start > 0)
+      {
+        SnapshotPoint prev = start - 1;
+        if (IsWhiteSpaceOrDelimiter(prev.GetChar()))
+        {
+          break;
+        }
+        start += -1;
+      }
+
+      var span = new SnapshotSpan(start, end);
+      // The ApplicableTo span is what text will be replaced by the completion item
+      ITrackingSpan applicableTo = snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
 
       var bindings = m_textBuffer.Properties["SchemeBindings"] as Dictionary<string, bool>;
 
-      foreach (var key in bindings.Keys)
-      {
-        strList.Add(key);
-      }
-
-      strList.Sort();
-
       m_compList = new List<Completion>();
-      foreach (string str in strList)
-        m_compList.Add(new Completion(str, str, str, null, null));
+
+      foreach (string key in bindings.Keys.OrderBy(x => x))
+      {
+        var str = key;
+        var v = bindings[key];
+        m_compList.Add(new Completion(str, str, (v ? "syntax" : "procedure") + ": " + str, v ? syntax_image : procedure_image, null));
+      }
 
       completionSets.Add(new CompletionSet(
           "Tokens",    //the non-localized title of the tab
           "Tokens",    //the display title of the tab
-          FindTokenSpanAtPosition(session.GetTriggerPoint(m_textBuffer),
-              session),
+          applicableTo,
           m_compList,
           null));
+    }
+
+    static bool IsWhiteSpaceOrDelimiter(char p)
+    {
+      switch (p)
+      {
+        case '(':
+        case '[':
+        case ' ':
+          return true;
+      }
+      return false;
     }
 
     ITrackingSpan FindTokenSpanAtPosition(ITrackingPoint point, ICompletionSession session)
