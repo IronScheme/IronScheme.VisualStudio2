@@ -1,6 +1,7 @@
 ﻿
 (library (visualstudio)
   (export 
+    run-expansion
     read-file
     get-forms
     read-imports)
@@ -8,6 +9,35 @@
     (ironscheme)
     (ironscheme reader)
     (ironscheme clr))
+
+  (define (read-definitions subst env)
+    (let ((lookup (make-eq-hashtable))
+          (bindings (make-eq-hashtable)))
+      (for-each (lambda (x)
+                  (hashtable-set! lookup (cdr x) (car x)))
+                subst)
+      (for-each (lambda (x)
+                  (let ((type (cadr x)))
+                    (case type
+                      [(global global-macro) 
+                        (hashtable-set! bindings 
+                                        (hashtable-ref lookup (car x) (ungensym (cddr x)))
+                                        type)])))
+                env)
+      (hashtable-entries bindings)))
+
+  (define (run-expansion e)
+    (call-with-values 
+      (lambda ()
+        (if (= 1 (length e))
+            (let-values (((name ver imp* vis* inv* invoke-code visit-code 
+                           export-subst export-env guard-code guard-dep*)
+                          (core-library-expander (car e))))
+              (values export-subst export-env)) 
+            (let-values (((lib* invoke-code macro* export-subst export-env) (top-level-expander e)))
+              (values export-subst export-env))))
+      read-definitions))
+
 
   (define (read-file port)
     (let f ((a '()))

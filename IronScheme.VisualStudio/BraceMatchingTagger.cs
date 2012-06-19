@@ -89,11 +89,11 @@ namespace IronScheme.VisualStudio
         }
         if (pair.Start.Snapshot != currentChar.Snapshot)
         {
-          pair.Start = pair.Start.TranslateTo(currentChar.Snapshot, SpanTrackingMode.EdgePositive);
+          pair.Start = pair.Start.TranslateTo(currentChar.Snapshot, SpanTrackingMode.EdgeExclusive);
         }
         if (pair.End.Snapshot != currentChar.Snapshot)
         {
-          pair.End = pair.End.TranslateTo(currentChar.Snapshot, SpanTrackingMode.EdgePositive);
+          pair.End = pair.End.TranslateTo(currentChar.Snapshot, SpanTrackingMode.EdgeExclusive);
         }
 
         if (pair.Start.Contains(currentChar) || pair.End.Contains(currentChar))

@@ -97,8 +97,8 @@ namespace IronScheme.VisualStudio
         else if (err.Span.OverlapsWith(spans[0]))
         {
           yield return err;
-          brace_errors.Remove(err);
-          break;
+          //brace_errors.Remove(err);
+          //break;
         }
       }
     }
@@ -199,30 +199,60 @@ namespace IronScheme.VisualStudio
       {
         var port = new TextSnapshotToTextReader(snapshot);
 
-        var result = "(read-file {0})".Eval(port);
-        var imports = "(read-imports {0})".Eval(result);
-        var env = "(apply environment {0})".Eval(imports);
+        try
+        {
+          var result = "(read-file {0})".Eval(port);
+          var imports = "(read-imports {0})".Eval(result);
+          var env = "(apply environment {0})".Eval(imports);
 
-        _buffer.Properties["SchemeEnvironment"] = env;
+          _buffer.Properties["SchemeEnvironment"] = env;
 
-        var b = "(environment-bindings {0})".Eval(env);
+          var b = "(environment-bindings {0})".Eval(env);
 
-        var s = SymbolTable.StringToObject("syntax");
-        var p = SymbolTable.StringToObject("procedure");
-        var bindings = ((Cons)b).Where(x => ((Cons)x).cdr == s || ((Cons)x).cdr == p).ToDictionary(x => (((Cons)x).car).ToString(), x => ((Cons)x).cdr == s);
+          var s = SymbolTable.StringToObject("syntax");
+          var p = SymbolTable.StringToObject("procedure");
+          var bindings = ((Cons)b).Where(x => ((Cons)x).cdr == s || ((Cons)x).cdr == p).ToDictionary(x => (((Cons)x).car).ToString(), x => ((Cons)x).cdr == s);
 
-        _buffer.Properties["SchemeBindings"] = bindings;
+          _buffer.Properties["SchemeBindings"] = bindings;
+
+          var expanded = "(run-expansion {0})".Eval<MultipleValues>(result).ToArray(2);
+          var names = expanded[0] as object[];
+          var types = expanded[1] as object[];
+
+          var global = SymbolTable.StringToObject("global");
+
+          for (int i = 0; i < names.Length; i++)
+          {
+            if (names[i] is SymbolId)
+            {
+              var name = SymbolTable.IdToString((SymbolId) names[i]);
+              // ignore lst
+              int foo;
+              if (name == "using" || name == "dummy" || int.TryParse(name, out foo))
+              {
+                continue;
+              }
+              bindings[name] = types[i] != global;
+            }
+          }
+        }
+        catch (SchemeException ex)
+        {
+          var cond = ex.Condition;
+        }
 
         var lines = _view.TextViewLines.ToArray();
-        
+
         var start = lines[0].Start;
         var end = lines[lines.Length - 1].End;
 
         var span = new SnapshotSpan(start, end);
-        
-        // notifiy classifier somehow
+
+        // notifiy classifier
         var classifier = _buffer.Properties["SchemeClassifier"] as ClassificationTagger;
         classifier.RaiseTagsChanged(span);
+
+
       }
 
       if (TagsChanged != null)

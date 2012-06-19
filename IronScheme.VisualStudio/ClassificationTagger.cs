@@ -87,9 +87,9 @@ namespace IronScheme.VisualStudio
       var p = SymbolTable.StringToObject("procedure");
       var b = "(environment-bindings (environment '(ironscheme)))".Eval();
       bindings = ((Cons)b).Where(x => ((Cons)x).cdr == s || ((Cons)x).cdr == p).ToDictionary(x => (((Cons)x).car).ToString(), x => ((Cons)x).cdr == s);
-
-      //"(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"d:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\");
-      "(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"c:\dev\IronScheme\IronScheme.Console\bin\Release\");
+      "(debug-mode? #t)".Eval();
+      "(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"d:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\");
+      //"(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"c:\dev\IronScheme\IronScheme.Console\bin\Release\");
       "(import (visualstudio))".Eval();
     }
 
