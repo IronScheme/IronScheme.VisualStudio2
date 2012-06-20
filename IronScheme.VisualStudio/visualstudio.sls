@@ -4,7 +4,8 @@
     run-expansion
     read-file
     get-forms
-    read-imports)
+    read-imports
+    get-error)
   (import 
     (ironscheme)
     (ironscheme reader))
@@ -43,6 +44,18 @@
         (if (eof-object? e)
             (reverse a)
             (f (cons e a))))))
+
+  (define (get-location con)
+    (let ((rtd (record-rtd con)))
+      (if (eq? (record-type-name rtd) '&source-information)
+          ((record-accessor rtd 1) con)
+          #f)))
+
+  (define (condition-location conds)
+    (exists get-location (simple-conditions conds)))
+
+  (define (get-error conds)
+    (values (condition-message conds) (condition-location conds)))
 
   (define (get-forms proc)
     (let-values (((p e) (open-string-output-port)))

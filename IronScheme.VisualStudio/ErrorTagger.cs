@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Text.RegularExpressions;
 using IronScheme.Compiler;
 using IronScheme.Runtime;
 using Microsoft.Scripting;
@@ -54,6 +55,7 @@ namespace IronScheme.VisualStudio
     ITextDocument _document;
     ITextView _view;
     readonly List<TagSpan<ErrorTag>> brace_errors = new List<TagSpan<ErrorTag>>();
+    TagSpan<ErrorTag> syntax_error;
 
     public ErrorTagger(ITextBuffer buffer, IBufferTagAggregatorFactoryService aggregatorFactory,
       IServiceProvider svcp, ITextDocumentFactoryService textDocumentFactory, ITextView view)
@@ -79,6 +81,18 @@ namespace IronScheme.VisualStudio
           var tagSpans = tagSpan.Span.GetSpans(spans[0].Snapshot)[0];
           var errtag = new ErrorTag(PredefinedErrorTypeNames.SyntaxError, tagSpan.Tag.ErrorMessage);
           yield return new TagSpan<ErrorTag>(tagSpans, errtag);
+        }
+      }
+
+      if (syntax_error != null)
+      {
+        if (syntax_error.Span.Snapshot != spans[0].Snapshot)
+        {
+          syntax_error = null;
+        }
+        else if (syntax_error.Span.OverlapsWith(spans[0]))
+        {
+          yield return syntax_error;
         }
       }
 
@@ -115,6 +129,7 @@ namespace IronScheme.VisualStudio
       _errorProvider.Tasks.Clear();
 
       brace_errors.Clear();
+      syntax_error = null;
 
       var bracestack = new Stack<SnapshotSpanPair>();
       var bracelist = new List<SnapshotSpanPair>();
@@ -189,6 +204,8 @@ namespace IronScheme.VisualStudio
       {
         var port = new TextSnapshotToTextReader(snapshot);
 
+        var prevbindings = _buffer.Properties["SchemeBindings"];
+
         try
         {
           var result = "(read-file {0})".Eval(port);
@@ -202,7 +219,7 @@ namespace IronScheme.VisualStudio
           var s = SymbolTable.StringToObject("syntax");
           var p = SymbolTable.StringToObject("procedure");
           var bindings = ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), GetBindingType);
-
+          
           _buffer.Properties["SchemeBindings"] = bindings;
 
           var expanded = "(run-expansion {0})".Eval<MultipleValues>(result).ToArray(2);
@@ -228,7 +245,18 @@ namespace IronScheme.VisualStudio
         }
         catch (SchemeException ex)
         {
+          _buffer.Properties["SchemeBindings"] = prevbindings;
           var cond = ex.Condition;
+          var error = "(get-error {0})".Eval<MultipleValues>(cond).ToArray(2);
+          var errtag = new ErrorTag(PredefinedErrorTypeNames.CompilerError, error[0]);
+          var errspan = new SnapshotSpan(snapshot, 0,0);
+          if (error[1] is string)
+          {
+            errspan = MakeSnapshotSpan(snapshot, error[1] as string);
+            syntax_error = new TagSpan<ErrorTag>(errspan, errtag);
+          }
+          AddErrorTask(errspan, errtag);
+          
         }
 
         var lines = _view.TextViewLines.ToArray();
@@ -247,9 +275,30 @@ namespace IronScheme.VisualStudio
       {
         TagsChanged(this, new SnapshotSpanEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length)));
       }
+    }
 
-      GC.Collect();
+    static readonly Regex LOCATIONMATCH = new Regex(
+      @"\((?<startline>\d+),(?<startcol>\d+)\)\s-\s\((?<endline>\d+),(?<endcol>\d+)\)",
+      RegexOptions.Compiled);
 
+    static SourceSpan ExtractLocation(string location)
+    {
+      var m = LOCATIONMATCH.Match(location);
+
+      return new SourceSpan(
+        new SourceLocation(0, Convert.ToInt32(m.Groups["startline"].Value), Convert.ToInt32(m.Groups["startcol"].Value)),
+        new SourceLocation(0, Convert.ToInt32(m.Groups["endline"].Value), Convert.ToInt32(m.Groups["endcol"].Value)));
+    } 
+
+    SnapshotSpan MakeSnapshotSpan(ITextSnapshot snapshot, string location)
+    {
+      var lines = snapshot.Lines.ToArray();
+      var loc = ExtractLocation(location);
+
+      var start = lines[loc.Start.Line - 1].Start + (loc.Start.Column - 1);
+      var end = lines[loc.End.Line - 1].Start + (loc.End.Column - 1);
+
+      return new SnapshotSpan(start, end);
     }
 
     static BindingType GetBindingType(object x)
