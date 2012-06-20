@@ -74,8 +74,10 @@ namespace IronScheme.VisualStudio
       {
         currentChar = currentChar.TranslateTo(spans[0].Snapshot, PointTrackingMode.Positive);
       }
-
-      currentChar -= 1;
+      if (currentChar.Position > 0)
+      {
+        currentChar -= 1;
+      }
 
       var bracelist = SourceBuffer.Properties[SnapshotSpanPair.BraceKey] as List<SnapshotSpanPair>;
 

@@ -241,14 +241,14 @@ namespace IronScheme.VisualStudio
         // notifiy classifier
         var classifier = _buffer.Properties["SchemeClassifier"] as ClassificationTagger;
         classifier.RaiseTagsChanged(span);
-
-
       }
 
       if (TagsChanged != null)
       {
         TagsChanged(this, new SnapshotSpanEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length)));
       }
+
+      GC.Collect();
 
     }
 

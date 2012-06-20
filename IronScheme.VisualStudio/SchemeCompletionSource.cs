@@ -60,7 +60,7 @@ namespace IronScheme.VisualStudio
       // The ApplicableTo span is what text will be replaced by the completion item
       ITrackingSpan applicableTo = snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
 
-      var bindings = m_textBuffer.Properties["SchemeBindings"] as Dictionary<string, bool>;
+      var bindings = m_textBuffer.Properties["SchemeBindings"] as Dictionary<string, BindingType>;
 
       m_compList = new List<Completion>();
 
@@ -68,7 +68,7 @@ namespace IronScheme.VisualStudio
       {
         var str = key;
         var v = bindings[key];
-        m_compList.Add(new Completion(str, str, (v ? "syntax" : "procedure") + ": " + str, v ? syntax_image : procedure_image, null));
+        m_compList.Add(new Completion(str, str, v.ToString(), v == BindingType.Procedure ? procedure_image : syntax_image, null));
       }
 
       completionSets.Add(new CompletionSet(

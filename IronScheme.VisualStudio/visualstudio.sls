@@ -7,8 +7,7 @@
     read-imports)
   (import 
     (ironscheme)
-    (ironscheme reader)
-    (ironscheme clr))
+    (ironscheme reader))
 
   (define (read-definitions subst env)
     (let ((lookup (make-eq-hashtable))
@@ -29,7 +28,7 @@
   (define (run-expansion e)
     (call-with-values 
       (lambda ()
-        (if (= 1 (length e))
+        (if (null? (cdr e))
             (let-values (((name ver imp* b*) (parse-library (car e))))
               (let-values (((lib* invoke-code macro* export-subst export-env) 
                             (top-level-expander (cons (cons 'import imp*) b*))))
@@ -37,7 +36,6 @@
             (let-values (((lib* invoke-code macro* export-subst export-env) (top-level-expander e)))
               (values export-subst export-env))))
       read-definitions))
-
 
   (define (read-file port)
     (let f ((a '()))
@@ -54,9 +52,8 @@
       (e)))
             
   (define (read-imports content)
-    (let ((c (car content)))
-      (if (= 1 (length content))
-          (cdr (cadddr (annotation-stripped c)))
-          (cdr (annotation-stripped c)))))
-            
-)
+    (if (null? (cdr content))
+        (let-values (((name ver imp* b*) (parse-library (car content))))
+          imp*)
+        (let-values (((imp* b*) (parse-top-level-program content)))
+          imp*))))

@@ -91,9 +91,18 @@ namespace IronScheme.VisualStudio
       var p = SymbolTable.StringToObject("procedure");
       var b = "(environment-bindings (environment '(ironscheme)))".Eval();
       bindings = ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), GetBindingType);
-      "(debug-mode? #t)".Eval();
+
+      "(library-path (list {0}))".Eval(Builtins.ApplicationDirectory);
+
+      var cfgpath = Path.Combine(Builtins.ApplicationDirectory, "config.ss");
+
+      if (File.Exists(cfgpath))
+      {
+        string.Format("(include \"{0}\")", cfgpath.Replace('\\', '/')).Eval();
+      }
+      //"(debug-mode? #t)".Eval();
       //"(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"d:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\");
-      "(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"c:\dev\IronScheme\IronScheme.Console\bin\Release\");
+      //"(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"c:\dev\IronScheme\IronScheme.Console\bin\Release\");
       "(import (visualstudio))".Eval();
     }
 
