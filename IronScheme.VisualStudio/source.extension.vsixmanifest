@@ -3,8 +3,9 @@
   <Metadata>
     <Identity Id="IronScheme.VisualStudio.19d3eb0d-b002-44a4-87f2-7d5f5b55c135" Version="1.999.0.1" Language="en-US" Publisher="leppie" />
     <DisplayName>IronScheme.VisualStudio</DisplayName>
-    <Description>IronScheme.VisualStudio</Description>
+    <Description>IronScheme editor extensions for Visual Studio</Description>
     <MoreInfo>http://ironscheme.codeplex.com</MoreInfo>
+    <License>license.txt</License>
     <Icon>ironscheme.ico</Icon>
     <PreviewImage>logo-192.png</PreviewImage>
     <Tags>ironscheme</Tags>
