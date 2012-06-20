@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Windows.Media;
+using System.IO;
+using System.Linq;
 using IronScheme.Compiler;
+using IronScheme.Runtime;
+using Microsoft.Scripting;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudio.Language.StandardClassification;
-using System.Runtime.CompilerServices;
-using Microsoft.VisualStudio.Text.Adornments;
-using Microsoft.VisualStudio.Shell;
-using IronScheme.Runtime;
-using Microsoft.Scripting;
-using System.IO;
 
 namespace IronScheme.VisualStudio
 {
@@ -61,36 +57,58 @@ namespace IronScheme.VisualStudio
     }
   }
 
+  enum BindingType
+  {
+    Syntax,
+    Procedure,
+    Record,
+    Unknown
+  }
+
   class ClassificationTagger : ITagger<ClassificationTag>
   {
     ITagAggregator<SchemeTag> _aggregator;
     ITextBuffer _buffer;
     IDictionary<Tokens, IClassificationType> _schemeTokenTypes = new Dictionary<Tokens, IClassificationType>();
-    IClassificationType syntax, procedure;
-    static readonly Dictionary<string, bool> bindings = new Dictionary<string, bool>(1000);
+    IClassificationType syntax, procedure, record;
+    static readonly Dictionary<string, BindingType> bindings = new Dictionary<string, BindingType>(1000);
     static readonly HashSet<string> library_keywords = new HashSet<string>(new string[] { "library", "export", "import", "only", "except", "rename", "prefix" });
 
     static ClassificationTagger()
     {
       const string FILENAME = "visualstudio.sls";
 
-      //if (!File.Exists(Path.Combine(Builtins.ApplicationDirectory, FILENAME)))
-      {
-        var stream = typeof(ErrorTagger).Assembly.GetManifestResourceStream("IronScheme.VisualStudio." + FILENAME);
-        using (var file = File.Create(Path.Combine(Builtins.ApplicationDirectory, FILENAME)))
-        {
-          stream.CopyTo(file);
-        }
-      }
+      ////if (!File.Exists(Path.Combine(Builtins.ApplicationDirectory, FILENAME)))
+      //{
+      //  var stream = typeof(ErrorTagger).Assembly.GetManifestResourceStream("IronScheme.VisualStudio." + FILENAME);
+      //  using (var file = File.Create(Path.Combine(Builtins.ApplicationDirectory, FILENAME)))
+      //  {
+      //    stream.CopyTo(file);
+      //  }
+      //}
 
       var s = SymbolTable.StringToObject("syntax");
       var p = SymbolTable.StringToObject("procedure");
       var b = "(environment-bindings (environment '(ironscheme)))".Eval();
-      bindings = ((Cons)b).Where(x => ((Cons)x).cdr == s || ((Cons)x).cdr == p).ToDictionary(x => (((Cons)x).car).ToString(), x => ((Cons)x).cdr == s);
+      bindings = ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), GetBindingType);
       "(debug-mode? #t)".Eval();
-      "(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"d:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\");
-      //"(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"c:\dev\IronScheme\IronScheme.Console\bin\Release\");
+      //"(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"d:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\");
+      "(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"c:\dev\IronScheme\IronScheme.Console\bin\Release\");
       "(import (visualstudio))".Eval();
+    }
+
+    static BindingType GetBindingType(object x)
+    {
+      var type = SymbolTable.IdToString((SymbolId) ((Cons)x).cdr);
+
+      switch (type)
+      {
+        case "syntax": return BindingType.Syntax;
+        case "procedure": return BindingType.Procedure;
+        case "record": return BindingType.Record;
+        default: return BindingType.Unknown;
+      }
+
     }
 
     internal ClassificationTagger(ITextBuffer buffer, IBufferTagAggregatorFactoryService aggregatorFactory, IClassificationTypeRegistryService registry)
@@ -109,6 +127,7 @@ namespace IronScheme.VisualStudio
 
       syntax = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
       procedure = registry.GetClassificationType("line number");
+      record = registry.GetClassificationType("cppmacro");
 
       _buffer.Properties["SchemeBindings"] = bindings;
 
@@ -136,7 +155,7 @@ namespace IronScheme.VisualStudio
 
     public IEnumerable<ITagSpan<ClassificationTag>> GetTags(NormalizedSnapshotSpanCollection spans)
     {
-      var bindings = _buffer.Properties["SchemeBindings"] as Dictionary<string, bool>;
+      var bindings = _buffer.Properties["SchemeBindings"] as Dictionary<string, BindingType>;
       foreach (var tagSpan in this._aggregator.GetTags(spans))
       {
         if (_schemeTokenTypes.ContainsKey(tagSpan.Tag.type))
@@ -145,18 +164,21 @@ namespace IronScheme.VisualStudio
           if (tagSpan.Tag.type == Tokens.SYMBOL)
           {
             var text = tagSpans.GetText();
-            bool val;
+            BindingType val;
             if (bindings.TryGetValue(text, out val))
             {
-              if (val)
+              switch (val)
               {
-                yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(syntax));
+                case BindingType.Syntax:
+                  yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(syntax));
+                  continue;
+                case BindingType.Procedure:
+                  yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(procedure));
+                  continue;
+                case BindingType.Record:
+                  yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(record));
+                  continue;
               }
-              else
-              {
-                yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(procedure));
-              }
-              continue;
             }
             if (library_keywords.Contains(text))
             {

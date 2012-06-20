@@ -1,15 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Microsoft.VisualStudio.Language.Intellisense;
-using System.Collections.ObjectModel;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Tagging;
+﻿using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Utilities;
+using System.Linq;
 using IronScheme.Compiler;
 using IronScheme.Runtime;
+using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Tagging;
+using Microsoft.VisualStudio.Utilities;
 
 namespace IronScheme.VisualStudio
 {
@@ -62,11 +59,11 @@ namespace IronScheme.VisualStudio
           if (_buffer.Properties.ContainsProperty("SchemeEnvironment"))
           {
             var env = _buffer.Properties["SchemeEnvironment"];
-            var bindings = _buffer.Properties["SchemeBindings"] as Dictionary<string, bool>;
+            var bindings = _buffer.Properties["SchemeBindings"] as Dictionary<string, BindingType>;
 
-            bool type;
+            BindingType type;
 
-            if (bindings.TryGetValue(text, out type) && !type)
+            if (bindings.TryGetValue(text, out type) && type == BindingType.Procedure)
             {
               try
               {

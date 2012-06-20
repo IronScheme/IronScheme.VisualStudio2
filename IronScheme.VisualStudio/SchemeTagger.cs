@@ -1,16 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Windows.Media;
 using IronScheme.Compiler;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudio.Language.StandardClassification;
-using System.Runtime.CompilerServices;
-using Microsoft.VisualStudio.Text.Adornments;
-using Microsoft.VisualStudio.Shell;
 
 namespace IronScheme.VisualStudio
 {

@@ -2,20 +2,15 @@
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
-using System.Windows.Media;
 using IronScheme.Compiler;
+using IronScheme.Runtime;
+using Microsoft.Scripting;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Adornments;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudio.Language.StandardClassification;
-using System.Runtime.CompilerServices;
-using Microsoft.VisualStudio.Text.Adornments;
-using Microsoft.VisualStudio.Shell;
-using IronScheme.Runtime;
-using System.IO;
-using Microsoft.Scripting;
-using Microsoft.VisualStudio.Text.Editor;
 
 namespace IronScheme.VisualStudio
 {
@@ -97,8 +92,6 @@ namespace IronScheme.VisualStudio
         else if (err.Span.OverlapsWith(spans[0]))
         {
           yield return err;
-          //brace_errors.Remove(err);
-          //break;
         }
       }
     }
@@ -162,7 +155,6 @@ namespace IronScheme.VisualStudio
                 var tup = bracestack.Pop();
                 if ((tagSpan.Tag.type == Tokens.RBRACK && !(tup is Square)) || (tagSpan.Tag.type == Tokens.RBRACE && (tup is Square)))
                 {
-                  //bracestack.Push(tup);
                   var errtag = new ErrorTag(PredefinedErrorTypeNames.SyntaxError, "Missing opening parenthesis");
                   AddErrorTask(span, errtag);
                   brace_errors.Add(new TagSpan<ErrorTag>(span, errtag));
@@ -182,8 +174,6 @@ namespace IronScheme.VisualStudio
             }
         }
       }
-
-      // maybe add check for balanced braces?
 
       while (bracestack.Count > 0)
       {
@@ -211,7 +201,7 @@ namespace IronScheme.VisualStudio
 
           var s = SymbolTable.StringToObject("syntax");
           var p = SymbolTable.StringToObject("procedure");
-          var bindings = ((Cons)b).Where(x => ((Cons)x).cdr == s || ((Cons)x).cdr == p).ToDictionary(x => (((Cons)x).car).ToString(), x => ((Cons)x).cdr == s);
+          var bindings = ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), GetBindingType);
 
           _buffer.Properties["SchemeBindings"] = bindings;
 
@@ -232,7 +222,7 @@ namespace IronScheme.VisualStudio
               {
                 continue;
               }
-              bindings[name] = types[i] != global;
+              bindings[name] = GetBindingType2(types[i]);
             }
           }
         }
@@ -260,6 +250,32 @@ namespace IronScheme.VisualStudio
         TagsChanged(this, new SnapshotSpanEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length)));
       }
 
+    }
+
+    static BindingType GetBindingType(object x)
+    {
+      var type = SymbolTable.IdToString((SymbolId)((Cons)x).cdr);
+
+      switch (type)
+      {
+        case "syntax": return BindingType.Syntax;
+        case "procedure": return BindingType.Procedure;
+        case "record": return BindingType.Record;
+        default: return BindingType.Unknown;
+      }
+    }
+
+    static BindingType GetBindingType2(object x)
+    {
+      var type = SymbolTable.IdToString((SymbolId)x);
+
+      switch (type)
+      {
+        case "global-macro": return BindingType.Syntax;
+        case "global": return BindingType.Procedure;
+        case "$rtd": return BindingType.Record;
+        default: return BindingType.Unknown;
+      }
     }
 
 

@@ -19,9 +19,9 @@
       (for-each (lambda (x)
                   (let ((type (cadr x)))
                     (case type
-                      [(global global-macro) 
+                      [(global global-macro $rtd) 
                         (hashtable-set! bindings 
-                                        (hashtable-ref lookup (car x) (ungensym (cddr x)))
+                                        (hashtable-ref lookup (car x) #f)
                                         type)])))
                 env)
       (hashtable-entries bindings)))
@@ -30,10 +30,10 @@
     (call-with-values 
       (lambda ()
         (if (= 1 (length e))
-            (let-values (((name ver imp* vis* inv* invoke-code visit-code 
-                           export-subst export-env guard-code guard-dep*)
-                          (core-library-expander (car e))))
-              (values export-subst export-env)) 
+            (let-values (((name ver imp* b*) (parse-library (car e))))
+              (let-values (((lib* invoke-code macro* export-subst export-env) 
+                            (top-level-expander (cons (cons 'import imp*) b*))))
+                (values export-subst export-env)))
             (let-values (((lib* invoke-code macro* export-subst export-env) (top-level-expander e)))
               (values export-subst export-env))))
       read-definitions))
