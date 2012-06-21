@@ -267,7 +267,7 @@ namespace IronScheme.VisualStudio
         var span = new SnapshotSpan(start, end);
 
         // notifiy classifier
-        var classifier = _buffer.Properties["SchemeClassifier"] as ClassificationTagger;
+        var classifier = _buffer.Properties[typeof(ITagger<IClassificationTag>)] as ClassificationTagger;
         classifier.RaiseTagsChanged(span);
       }
 

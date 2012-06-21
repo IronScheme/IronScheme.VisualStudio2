@@ -54,11 +54,6 @@ namespace IronScheme.VisualStudio
     public ICompletionBroker Broker { get; private set; }
     public IOleCommandTarget Next { get; set; }
 
-    private char GetTypeChar(IntPtr pvaIn)
-    {
-      return (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
-    }
-
     public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
     {
       bool handled = false;

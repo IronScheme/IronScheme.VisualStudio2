@@ -84,7 +84,7 @@ namespace IronScheme.VisualStudio
 
       "(library-path (list {0}))".Eval(Builtins.ApplicationDirectory);
 
-      var cfgpath = Path.Combine(Builtins.ApplicationDirectory, "config.ss");
+      var cfgpath = Path.Combine(Builtins.ApplicationDirectory, "../config.ss");
 
       if (File.Exists(cfgpath))
       {
@@ -137,8 +137,6 @@ namespace IronScheme.VisualStudio
       _buffer.Properties["SchemeBindings"] = bindings;
 
       _aggregator.BatchedTagsChanged += _aggregator_BatchedTagsChanged;
-
-      _buffer.Properties["SchemeClassifier"] = this;
     }
 
     internal void RaiseTagsChanged(SnapshotSpan span)

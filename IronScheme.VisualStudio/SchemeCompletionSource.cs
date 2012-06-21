@@ -11,6 +11,20 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace IronScheme.VisualStudio
 {
+  [Export(typeof(ICompletionSourceProvider))]
+  [ContentType("scheme")]
+  [Name("token completion")]
+  class SchemeCompletionSourceProvider : ICompletionSourceProvider
+  {
+    [Import]
+    internal ITextStructureNavigatorSelectorService NavigatorService { get; set; }
+
+    public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer)
+    {
+      return new SchemeCompletionSource(this, textBuffer);
+    }
+  }
+
   class SchemeCompletionSource : ICompletionSource
   {
     SchemeCompletionSourceProvider m_sourceProvider;
@@ -68,7 +82,10 @@ namespace IronScheme.VisualStudio
       {
         var str = key;
         var v = bindings[key];
-        m_compList.Add(new Completion(str, str, v.ToString(), v == BindingType.Procedure ? procedure_image : syntax_image, null));
+        if (v != BindingType.Record)
+        {
+          m_compList.Add(new Completion(str, str, v.ToString(), v == BindingType.Procedure ? procedure_image : syntax_image, null));
+        }
       }
 
       completionSets.Add(new CompletionSet(
@@ -99,29 +116,10 @@ namespace IronScheme.VisualStudio
       return currentPoint.Snapshot.CreateTrackingSpan(extent.Span, SpanTrackingMode.EdgeInclusive);
     }
 
-    private bool m_isDisposed;
     public void Dispose()
     {
-      if (!m_isDisposed)
-      {
-        GC.SuppressFinalize(this);
-        m_isDisposed = true;
-      }
-    }
 
-  }
-
-  [Export(typeof(ICompletionSourceProvider))]
-  [ContentType("scheme")]
-  [Name("token completion")]
-  class SchemeCompletionSourceProvider : ICompletionSourceProvider
-  {
-    [Import]
-    internal ITextStructureNavigatorSelectorService NavigatorService { get; set; }
-
-    public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer)
-    {
-      return new SchemeCompletionSource(this, textBuffer);
     }
   }
+
 }
