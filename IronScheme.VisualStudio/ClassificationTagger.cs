@@ -9,15 +9,16 @@ using Microsoft.Scripting;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudio.Utilities;
 
 namespace IronScheme.VisualStudio
 {
-  [Export(typeof(ITaggerProvider))]
+  [Export(typeof(IViewTaggerProvider))]
   [ContentType("scheme")]
   [TagType(typeof(ClassificationTag))]
-  internal class ClassificationTaggerProvider : ITaggerProvider
+  internal class ClassificationTaggerProvider : IViewTaggerProvider
   {
     [Export]
     [Name("scheme")]
@@ -46,14 +47,14 @@ namespace IronScheme.VisualStudio
     public static FileExtensionToContentTypeDefinition ScmFileExtension = null;
 
     [Import]
-    internal IClassificationTypeRegistryService ClassificationRegistry = null; // Set via MEF
+    internal IClassificationTypeRegistryService ClassificationRegistry = null; 
     [Import]
     internal IBufferTagAggregatorFactoryService aggregatorFactory = null;
 
-    public ITagger<T> CreateTagger<T>(ITextBuffer buffer) where T : ITag
+    public ITagger<T> CreateTagger<T>(ITextView view, ITextBuffer buffer) where T : ITag
     {
       return buffer.Properties.GetOrCreateSingletonProperty(
-        delegate { return new ClassificationTagger(buffer, aggregatorFactory, ClassificationRegistry) as ITagger<T>; });
+        delegate { return new ClassificationTagger(view, buffer, aggregatorFactory, ClassificationRegistry) as ITagger<T>; });
     }
   }
 
@@ -76,17 +77,6 @@ namespace IronScheme.VisualStudio
 
     static ClassificationTagger()
     {
-      const string FILENAME = "visualstudio.sls";
-
-      ////if (!File.Exists(Path.Combine(Builtins.ApplicationDirectory, FILENAME)))
-      //{
-      //  var stream = typeof(ErrorTagger).Assembly.GetManifestResourceStream("IronScheme.VisualStudio." + FILENAME);
-      //  using (var file = File.Create(Path.Combine(Builtins.ApplicationDirectory, FILENAME)))
-      //  {
-      //    stream.CopyTo(file);
-      //  }
-      //}
-
       var s = SymbolTable.StringToObject("syntax");
       var p = SymbolTable.StringToObject("procedure");
       var b = "(environment-bindings (environment '(ironscheme)))".Eval();
@@ -100,9 +90,7 @@ namespace IronScheme.VisualStudio
       {
         string.Format("(include \"{0}\")", cfgpath.Replace('\\', '/')).Eval();
       }
-      //"(debug-mode? #t)".Eval();
-      //"(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"d:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\");
-      //"(library-path (list {0} {1}))".Eval(Builtins.ApplicationDirectory, @"c:\dev\IronScheme\IronScheme.Console\bin\Release\");
+
       "(import (visualstudio))".Eval();
     }
 
@@ -120,11 +108,19 @@ namespace IronScheme.VisualStudio
 
     }
 
-    internal ClassificationTagger(ITextBuffer buffer, IBufferTagAggregatorFactoryService aggregatorFactory, IClassificationTypeRegistryService registry)
+    internal ClassificationTagger(ITextView view, ITextBuffer buffer, IBufferTagAggregatorFactoryService aggregatorFactory, IClassificationTypeRegistryService registry)
     {
       _buffer = buffer;
-      _aggregator = aggregatorFactory.CreateTagAggregator<SchemeTag>(buffer);
 
+      var options = view.Options;
+
+      options.SetOptionValue(DefaultOptions.ConvertTabsToSpacesOptionId, true);
+      options.SetOptionValue(DefaultOptions.IndentSizeOptionId, 2);
+      options.SetOptionValue(DefaultOptions.TabSizeOptionId, 2);
+      options.SetOptionValue(DefaultTextViewHostOptions.LineNumberMarginId, true);
+
+      _aggregator = aggregatorFactory.CreateTagAggregator<SchemeTag>(buffer);
+      
       _schemeTokenTypes[Tokens.COMMENT] = registry.GetClassificationType(PredefinedClassificationTypeNames.Comment);
       _schemeTokenTypes[Tokens.CHARACTER] = registry.GetClassificationType(PredefinedClassificationTypeNames.Character);
       _schemeTokenTypes[Tokens.DIRECTIVE] = registry.GetClassificationType(PredefinedClassificationTypeNames.PreprocessorKeyword);
