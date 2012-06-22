@@ -1,9 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronScheme.VisualStudio", "IronScheme.VisualStudio\IronScheme.VisualStudio.csproj", "{B3B78D50-29A1-4012-B2A7-5C9945C201B1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronScheme.VisualStudio.REPL", "IronScheme.VisualStudio.REPL\IronScheme.VisualStudio.REPL.csproj", "{2AEA2177-08B0-4492-B911-CCEA5B4C33A0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronScheme.VisualStudio.REPL", "IronScheme.VisualStudio.REPL.csproj", "{2AEA2177-08B0-4492-B911-CCEA5B4C33A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,10 +13,6 @@ Global
 		{2AEA2177-08B0-4492-B911-CCEA5B4C33A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2AEA2177-08B0-4492-B911-CCEA5B4C33A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2AEA2177-08B0-4492-B911-CCEA5B4C33A0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B3B78D50-29A1-4012-B2A7-5C9945C201B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B3B78D50-29A1-4012-B2A7-5C9945C201B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B3B78D50-29A1-4012-B2A7-5C9945C201B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B3B78D50-29A1-4012-B2A7-5C9945C201B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
