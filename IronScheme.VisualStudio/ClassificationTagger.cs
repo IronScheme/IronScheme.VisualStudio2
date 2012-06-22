@@ -58,12 +58,13 @@ namespace IronScheme.VisualStudio
     }
   }
 
-  enum BindingType
+  enum BindingType : uint
   {
     Syntax,
     Procedure,
     Record,
-    Unknown
+    Unknown,
+    LocalMask = 0xf0000000
   }
 
   class ClassificationTagger : ITagger<ClassificationTag>
@@ -170,7 +171,7 @@ namespace IronScheme.VisualStudio
             BindingType val;
             if (bindings.TryGetValue(text, out val))
             {
-              switch (val)
+              switch ((val & ~BindingType.LocalMask))
               {
                 case BindingType.Syntax:
                   yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(syntax));

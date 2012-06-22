@@ -24,6 +24,8 @@ namespace IronScheme.VisualStudio
   {
     public int? GetDesiredIndentation(ITextSnapshotLine line)
     {
+      if (line.LineNumber == 0) return 0;
+
       var snapshot = line.Snapshot;
       var prevline = snapshot.GetLineFromLineNumber(line.LineNumber - 1);
       var text = prevline.GetText();

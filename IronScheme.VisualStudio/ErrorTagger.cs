@@ -209,6 +209,12 @@ namespace IronScheme.VisualStudio
         try
         {
           var result = "(read-file {0})".Eval(port);
+
+          if (result == null)
+          {
+            return;
+          }
+
           var imports = "(read-imports {0})".Eval(result);
           var env = "(apply environment {0})".Eval(imports);
 
@@ -239,7 +245,7 @@ namespace IronScheme.VisualStudio
               {
                 continue;
               }
-              bindings[name] = GetBindingType2(types[i]);
+              bindings[name] = GetBindingType2(types[i]) | BindingType.LocalMask;
             }
           }
         }
