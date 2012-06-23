@@ -61,7 +61,7 @@ namespace IronScheme.VisualStudio.REPL {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Can not create the IronScheme console window..
+        ///   Looks up a localized string similar to Can not create the IronScheme REPL window..
         /// </summary>
         internal static string CanNotCreateConsole {
             get {

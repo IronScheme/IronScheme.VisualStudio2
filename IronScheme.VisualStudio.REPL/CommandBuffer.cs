@@ -45,7 +45,7 @@ namespace IronScheme.VisualStudio.REPL
 
       // Check with the engine if we can execute the text.
       bool allowIncomplete = !(string.IsNullOrEmpty(text) || (text.Trim().Length == 0));
-      bool canExecute = true;//engine.ParseInteractiveInput(textSoFar.ToString(), allowIncomplete);
+      bool canExecute =  true;//engine.ParseInteractiveInput(textSoFar.ToString(), allowIncomplete);
       if (canExecute)
       {
         // If the text can be execute, then execute it and reset the text.

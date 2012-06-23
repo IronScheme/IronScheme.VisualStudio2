@@ -5,6 +5,15 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronScheme.VisualStudio", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronScheme.VisualStudio.REPL", "IronScheme.VisualStudio.REPL\IronScheme.VisualStudio.REPL.csproj", "{2AEA2177-08B0-4492-B911-CCEA5B4C33A0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{AEF7FCD9-6DB7-4598-9211-C7ABE795A446}"
+	ProjectSection(SolutionItems) = preProject
+		libs\IronScheme.Closures.dll = libs\IronScheme.Closures.dll
+		libs\IronScheme.Scripting.dll = libs\IronScheme.Scripting.dll
+		libs\IronScheme.dll = libs\IronScheme.dll
+		libs\Oyster.IntX.dll = libs\Oyster.IntX.dll
+		libs\ironscheme.boot.dll = libs\ironscheme.boot.dll
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="CanNotCreateConsole" xml:space="preserve">
-    <value>Can not create the IronScheme console window.</value>
+    <value>Can not create the IronScheme REPL window.</value>
   </data>
   <data name="CanNotCreateObject" xml:space="preserve">
     <value>Can not create the object from the local registry</value>

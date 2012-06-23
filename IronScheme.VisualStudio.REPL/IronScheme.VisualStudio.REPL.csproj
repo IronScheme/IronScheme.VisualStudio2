@@ -55,6 +55,18 @@
       <SpecificVersion>True</SpecificVersion>
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="IronScheme">
+      <HintPath>..\libs\IronScheme.dll</HintPath>
+    </Reference>
+    <Reference Include="ironscheme.boot">
+      <HintPath>..\libs\ironscheme.boot.dll</HintPath>
+    </Reference>
+    <Reference Include="IronScheme.Closures">
+      <HintPath>..\libs\IronScheme.Closures.dll</HintPath>
+    </Reference>
+    <Reference Include="IronScheme.Scripting">
+      <HintPath>..\libs\IronScheme.Scripting.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\VS\Microsoft.VisualStudio.ComponentModelHost.dll</HintPath>
@@ -132,6 +144,9 @@
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <SpecificVersion>True</SpecificVersion>
       <HintPath>..\..\Lib\VS\Microsoft.VisualStudio.TextManager.Interop.8.0.dll</HintPath>
+    </Reference>
+    <Reference Include="Oyster.IntX">
+      <HintPath>..\libs\Oyster.IntX.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />

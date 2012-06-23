@@ -13,12 +13,12 @@ namespace IronScheme.VisualStudio.REPL
   class TextBufferStream : Stream
   {
     // The text buffer used to write.
-    private ITextBuffer textBuffer;
+    ITextBuffer textBuffer;
     // The text marker used to mark the read-only region of the buffer.
-    private byte[] byteBuffer;
+    byte[] byteBuffer;
     int usedBuffer;
 
-    private const int bufferSize = 1024;
+    const int bufferSize = 1024;
 
     /// <summary>
     /// Creates a new TextBufferStream on top of a text buffer.
@@ -185,7 +185,7 @@ namespace IronScheme.VisualStudio.REPL
     /// <summary>
     /// Expands the read only region to the end of the current buffer
     /// </summary>
-    private void ExtendReadOnlyRegion()
+    void ExtendReadOnlyRegion()
     {
       if (!textBuffer.EditInProgress)
       {
@@ -201,7 +201,7 @@ namespace IronScheme.VisualStudio.REPL
       }
     }
 
-    private IReadOnlyRegion readOnlyRegion;
+    IReadOnlyRegion readOnlyRegion;
 
     internal void ClearReadOnlyRegion()
     {

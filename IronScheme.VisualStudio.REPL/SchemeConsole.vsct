@@ -27,8 +27,8 @@
       <Menu guid="guidSchemeConsoleCmdSet" id="ISConsoleCtx" priority="0x0000" type="Context">
         <Parent guid="guidSchemeConsoleCmdSet" id="0" />
         <Strings>
-          <ButtonText>IronScheme Console Context</ButtonText>
-          <CommandName>IronScheme Console Context</CommandName>
+          <ButtonText>IronScheme REPL Context</ButtonText>
+          <CommandName>IronScheme REPL Context</CommandName>
         </Strings>
       </Menu>
     </Menus>
@@ -55,7 +55,7 @@
         <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1" />
         <Icon guid="guidSchemeConsoleBmp" id="bmpConsole" />
         <Strings>
-          <ButtonText>IronScheme Console</ButtonText>
+          <ButtonText>IronScheme REPL</ButtonText>
         </Strings>
       </Button>
     </Buttons>

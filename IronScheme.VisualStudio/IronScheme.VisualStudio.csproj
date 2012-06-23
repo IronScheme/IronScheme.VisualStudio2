@@ -44,19 +44,19 @@
     </Reference>
     <Reference Include="IronScheme, Version=1.0.0.0, Culture=neutral, PublicKeyToken=78f2e9d9541a0dee, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\IronScheme.dll</HintPath>
+      <HintPath>..\libs\IronScheme.dll</HintPath>
     </Reference>
     <Reference Include="ironscheme.boot, Version=1.0.0.0, Culture=neutral, PublicKeyToken=78f2e9d9541a0dee, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\ironscheme.boot.dll</HintPath>
+      <HintPath>..\libs\ironscheme.boot.dll</HintPath>
     </Reference>
     <Reference Include="IronScheme.Closures, Version=1.0.0.0, Culture=neutral, PublicKeyToken=78f2e9d9541a0dee, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\IronScheme.Closures.dll</HintPath>
+      <HintPath>..\libs\IronScheme.Closures.dll</HintPath>
     </Reference>
     <Reference Include="IronScheme.Scripting, Version=1.0.0.500, Culture=neutral, PublicKeyToken=78f2e9d9541a0dee, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\IronScheme.Scripting.dll</HintPath>
+      <HintPath>..\libs\IronScheme.Scripting.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <Private>False</Private>
@@ -88,7 +88,7 @@
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Oyster.IntX, Version=0.9.3.3, Culture=neutral, PublicKeyToken=78f2e9d9541a0dee, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>D:\dev\IronScheme\IronScheme\IronScheme.Console\bin\Release\Oyster.IntX.dll</HintPath>
+      <HintPath>..\libs\Oyster.IntX.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
