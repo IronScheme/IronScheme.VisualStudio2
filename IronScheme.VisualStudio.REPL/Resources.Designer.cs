@@ -79,7 +79,7 @@ namespace IronScheme.VisualStudio.REPL {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &gt;&gt;&gt;.
+        ///   Looks up a localized string similar to &gt; .
         /// </summary>
         internal static string DefaultConsolePrompt {
             get {
@@ -88,16 +88,7 @@ namespace IronScheme.VisualStudio.REPL {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to IronScheme {0}.{1}.{2}.
-        /// </summary>
-        internal static string EngineVersionFormat {
-            get {
-                return ResourceManager.GetString("EngineVersionFormat", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to ....
+        ///   Looks up a localized string similar to . .
         /// </summary>
         internal static string MultiLineConsolePrompt {
             get {
@@ -106,7 +97,7 @@ namespace IronScheme.VisualStudio.REPL {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to IronScheme Console.
+        ///   Looks up a localized string similar to IronScheme REPL.
         /// </summary>
         internal static string ToolWindowTitle {
             get {
