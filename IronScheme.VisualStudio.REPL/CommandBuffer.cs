@@ -46,39 +46,49 @@ namespace IronScheme.VisualStudio.REPL
       textSoFar.Append(text);
 
       // Check with the engine if we can execute the text.
-      bool allowIncomplete = !(string.IsNullOrEmpty(text) || (text.Trim().Length == 0));
-      var expr = "(parse-repl {0})".Eval(textSoFar.ToString());
-      bool canExecute = Builtins.IsTrue(expr);
-      if (canExecute)
+      try
       {
-        // If the text can be execute, then execute it and reset the text.
-        try
+        var expr = "(parse-repl {0})".Eval(textSoFar.ToString());
+        bool canExecute = Builtins.IsTrue(expr);
+        if (canExecute)
         {
+          // If the text can be execute, then execute it and reset the text.
           try
           {
-            var result = "(eval {0} (interaction-environment))".Eval(expr);
-            if (!Builtins.IsTrue(Builtins.IsUnspecified(result)))
+            try
             {
-              var fmt = "(format \"~s\" {0})".Eval<string>(result);
-              Write(fmt + System.Environment.NewLine);
+              var output = new System.IO.StreamWriter(textBufferStream);
+              var result = "(parameterize [(current-output-port {1})] (eval {0} (interaction-environment)))".Eval(expr, output);
+              output.Flush();
+              if (!Builtins.IsTrue(Builtins.IsUnspecified(result)))
+              {
+                var fmt = "(format \"~s\" {0})".Eval<string>(result);
+                Write(fmt + System.Environment.NewLine);
+              }
+            }
+            catch (Exception ex)
+            {
+              Write(ex.ToString());
             }
           }
-          catch (Exception ex)
+          finally
           {
-            Write(ex.ToString());
+            textSoFar.Length = 0;
+            Write(singleLinePrompt);
           }
         }
-        finally
+        else
         {
-          textSoFar.Length = 0;
-          Write(singleLinePrompt);
+          // If the command is not executed, then it is a multi-line command, so
+          // we have to write the correct prompt to the output.
+          Write(multiLinePrompt);
         }
       }
-      else
+      catch (Exception ex)
       {
-        // If the command is not executed, then it is a multi-line command, so
-        // we have to write the correct prompt to the output.
-        Write(multiLinePrompt);
+        Write(ex.ToString());
+        textSoFar.Length = 0;
+        Write(singleLinePrompt);
       }
     }
 
