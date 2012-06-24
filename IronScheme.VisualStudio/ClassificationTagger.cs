@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using IronScheme.Compiler;
 using IronScheme.Runtime;
+using IronScheme.VisualStudio.Common;
 using Microsoft.Scripting;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
@@ -78,21 +79,10 @@ namespace IronScheme.VisualStudio
 
     static ClassificationTagger()
     {
-      var s = SymbolTable.StringToObject("syntax");
-      var p = SymbolTable.StringToObject("procedure");
       var b = "(environment-bindings (environment '(ironscheme)))".Eval();
       bindings = ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), GetBindingType);
 
-      "(library-path (list {0}))".Eval(Builtins.ApplicationDirectory);
-
-      var cfgpath = Path.Combine(Builtins.ApplicationDirectory, "../config.ss");
-
-      if (File.Exists(cfgpath))
-      {
-        string.Format("(include \"{0}\")", cfgpath.Replace('\\', '/')).Eval();
-      }
-
-      "(import (visualstudio))".Eval();
+      var t = Initialization.Complete;
     }
 
     static BindingType GetBindingType(object x)

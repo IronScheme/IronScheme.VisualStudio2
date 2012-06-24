@@ -182,8 +182,7 @@
     </VSCTCompile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="SchemeConsoleIcon_24Bit.bmp" />
-    <Content Include="SchemeConsoleIcon_32Bit.bmp" />
+    <Content Include="logo.png" />
     <Content Include="Resources\Package.ico" />
     <None Include="source.extension.vsixmanifest" />
   </ItemGroup>
@@ -197,6 +196,12 @@
       <SubType>Designer</SubType>
       <MergeWithCTO>true</MergeWithCTO>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IronScheme.VisualStudio.Common\IronScheme.VisualStudio.Common.csproj">
+      <Project>{15cc7371-bd37-4432-8b03-0a8e877b1018}</Project>
+      <Name>IronScheme.VisualStudio.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup>
     <!--

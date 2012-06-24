@@ -61,7 +61,7 @@
     </Buttons>
     <!-- The bitmaps section is used to define the bitmaps that are used for the commands. -->
     <Bitmaps>
-      <Bitmap guid="guidSchemeConsoleBmp" href="SchemeConsoleIcon_32Bit.bmp" usedList="bmpConsole" />
+      <Bitmap guid="guidSchemeConsoleBmp" href="logo.png" usedList="bmpConsole" />
     </Bitmaps>
   </Commands>
   

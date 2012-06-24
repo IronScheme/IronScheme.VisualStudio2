@@ -22,6 +22,8 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
+using IronScheme.VisualStudio.Common;
 
 namespace IronScheme.VisualStudio.REPL
 {
@@ -116,6 +118,7 @@ namespace IronScheme.VisualStudio.REPL
         }
       }
 
+      var t = Initialization.Complete;
 
       //Initialize the history
       history = new HistoryBuffer();
@@ -130,6 +133,7 @@ namespace IronScheme.VisualStudio.REPL
       mefTextBuffer.ChangeContentType(ipContentType, null);
       var options = adapterFactory.GetWpfTextView(textView).Options;
       options.SetOptionValue(DefaultTextViewHostOptions.LineNumberMarginId, false);
+      options.SetOptionValue(DefaultTextViewOptions.AutoScrollId, true);
 
       adapterFactory.GetWpfTextView(textView).Caret.MoveTo(new SnapshotPoint(mefTextBuffer.CurrentSnapshot, mefTextBuffer.CurrentSnapshot.Length));
 
@@ -190,12 +194,6 @@ namespace IronScheme.VisualStudio.REPL
     /// </summary>
     void InitializeEngine()
     {
-      // Write engine version end copyright on the console.
-      using (StreamWriter writer = new StreamWriter(textStream as Stream))
-      {
-        writer.WriteLine("IronScheme REPL");
-      }
-
       // Create the buffer that will handle the commands to the engine.
       inputBuffer = new CommandBuffer(textStream);
     }

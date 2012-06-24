@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Text;
+using IronScheme;
+using IronScheme.Runtime;
 
 namespace IronScheme.VisualStudio.REPL
 {
@@ -45,13 +47,26 @@ namespace IronScheme.VisualStudio.REPL
 
       // Check with the engine if we can execute the text.
       bool allowIncomplete = !(string.IsNullOrEmpty(text) || (text.Trim().Length == 0));
-      bool canExecute =  true;//engine.ParseInteractiveInput(textSoFar.ToString(), allowIncomplete);
+      var expr = "(parse-repl {0})".Eval(textSoFar.ToString());
+      bool canExecute = Builtins.IsTrue(expr);
       if (canExecute)
       {
         // If the text can be execute, then execute it and reset the text.
         try
         {
-          //engine.ExecuteToConsole(textSoFar.ToString());
+          try
+          {
+            var result = "(eval {0} (interaction-environment))".Eval(expr);
+            if (!Builtins.IsTrue(Builtins.IsUnspecified(result)))
+            {
+              var fmt = "(format \"~s\" {0})".Eval<string>(result);
+              Write(fmt + System.Environment.NewLine);
+            }
+          }
+          catch (Exception ex)
+          {
+            Write(ex.ToString());
+          }
         }
         finally
         {

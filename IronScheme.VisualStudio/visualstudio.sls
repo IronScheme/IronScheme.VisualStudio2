@@ -1,6 +1,7 @@
 ﻿
 (library (visualstudio)
-  (export 
+  (export
+    parse-repl 
     run-expansion
     read-file
     get-forms
@@ -9,6 +10,16 @@
   (import 
     (ironscheme)
     (ironscheme reader))
+
+  (define (parse-repl text)
+    (let ((port (open-string-input-port 
+                  (string-append "(begin "
+                                 text
+                                 "\n)"))))
+      (let ((expr (read port)))
+        (if (eof-object? expr)
+            #f
+            expr))))
 
   (define (read-definitions subst env)
     (let ((lookup (make-eq-hashtable))
