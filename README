@@ -1,4 +1,34 @@
 New VS addin
+============
+
+Rewritten from scratch. Only runs on VS2012 for now.
+
+Configuration
+=============
+
+Create a file called 'config.ss' in the VS extensions directory (not the one plugin where the plugin is installed).
+
+Add the following to point to your IronScheme or any library location:
+
+(library-path 
+  (append (library-path) 
+          (list "your location")))
+
+This will run when either the REPL or classifier is run for the first time.
+
+
+Tips
+====
+
+To improve IronScheme startup speed, I recommend NGEN'ing.
+
+You can do this with the following command:
+
+ngen install IronScheme.VisualStudio.dll
+
+
+Todo list
+=========
 
 [*] Classifier
 [*] ErrorTagger
