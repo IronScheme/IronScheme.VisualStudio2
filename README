@@ -16,17 +16,6 @@ Add the following to point to your IronScheme or any library location:
 
 This will run when either the REPL or classifier is run for the first time.
 
-
-Tips
-====
-
-To improve IronScheme startup speed, I recommend NGEN'ing.
-
-You can do this with the following command:
-
-ngen install IronScheme.VisualStudio.dll
-
-
 Todo list
 =========
 
