@@ -1,5 +1,4 @@
-﻿
-(library (visualstudio)
+﻿(library (visualstudio)
   (export
     parse-repl 
     run-expansion
