@@ -136,9 +136,6 @@
       <SpecificVersion>True</SpecificVersion>
       <HintPath>..\..\Lib\VS\Microsoft.VisualStudio.TextManager.Interop.8.0.dll</HintPath>
     </Reference>
-    <Reference Include="Oyster.IntX">
-      <HintPath>..\libs\Oyster.IntX.dll</HintPath>
-    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
