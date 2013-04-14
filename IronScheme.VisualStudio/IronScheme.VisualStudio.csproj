@@ -123,7 +123,6 @@
     <Content Include="visualstudio.sls">
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <None Include="test.ss" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\CodeField.png" />
