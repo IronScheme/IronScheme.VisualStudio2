@@ -6,7 +6,7 @@ using System.Linq;
 using IronScheme.Compiler;
 using IronScheme.Runtime;
 using IronScheme.VisualStudio.Common;
-using Microsoft.Scripting;
+using IronScheme.Scripting;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;

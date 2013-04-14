@@ -21,7 +21,7 @@
             #f
             expr))))
 
-  (define (read-definitions subst env)
+  (define (read-definitions subst env invoke-code)
     (let ((lookup (make-eq-hashtable))
           (bindings (make-eq-hashtable)))
       (for-each (lambda (x)
@@ -35,7 +35,8 @@
                                         (hashtable-ref lookup (car x) #f)
                                         type)])))
                 env)
-      (hashtable-entries bindings)))
+      (let-values (((k v) (hashtable-entries bindings)))
+        (values k v (expanded->core invoke-code)))))
 
   (define (run-expansion e)
     (call-with-values 
@@ -44,9 +45,9 @@
             (let-values (((name ver imp* b*) (parse-library (car e))))
               (let-values (((lib* invoke-code macro* export-subst export-env) 
                             (top-level-expander (cons (cons 'import imp*) b*))))
-                (values export-subst export-env)))
+                (values export-subst export-env invoke-code)))
             (let-values (((lib* invoke-code macro* export-subst export-env) (top-level-expander e)))
-              (values export-subst export-env))))
+              (values export-subst export-env invoke-code))))
       read-definitions))
 
   (define (read-file port)

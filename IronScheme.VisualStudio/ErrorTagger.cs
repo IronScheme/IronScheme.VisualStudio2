@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using IronScheme.Compiler;
 using IronScheme.Runtime;
-using Microsoft.Scripting;
+using IronScheme.Scripting;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
@@ -154,7 +154,7 @@ namespace IronScheme.VisualStudio
               break;
             }
           case Tokens.LBRACE:
-          case Tokens.BYTEVECTORLBRACE:
+          case Tokens.VALUEVECTORLBRACE:
           case Tokens.VECTORLBRACE:
             {
               var tup = new SnapshotSpanPair { Start = span };
@@ -222,17 +222,14 @@ namespace IronScheme.VisualStudio
 
           var b = "(environment-bindings {0})".Eval(env);
 
-          var s = SymbolTable.StringToObject("syntax");
-          var p = SymbolTable.StringToObject("procedure");
           var bindings = ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), GetBindingType);
           
           _buffer.Properties["SchemeBindings"] = bindings;
 
-          var expanded = "(run-expansion {0})".Eval<MultipleValues>(result).ToArray(2);
+          var expanded = "(run-expansion {0})".Eval<MultipleValues>(result).ToArray(3);
           var names = expanded[0] as object[];
           var types = expanded[1] as object[];
-
-          var global = SymbolTable.StringToObject("global");
+          var output = expanded[2];
 
           for (int i = 0; i < names.Length; i++)
           {
