@@ -31,3 +31,11 @@ Todo list
 [ ] DropDowns
 [ ] IEditorOperationsFactoryService
 [ ] Strip trailing whitespace on save
+
+Extra 'tooltips'
+================
+
+[ ] Show import location (perhaps 'goto definition')
+[ ] Procedure info for those defined in the source code (currently only hightlighted)
+[ ] Info for locals (perhaps arrows like DrRacket does?)
+
