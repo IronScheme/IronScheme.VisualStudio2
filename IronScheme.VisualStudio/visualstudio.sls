@@ -42,7 +42,7 @@
       (lambda ()
         (if (null? (cdr e))
             (let-values (((name ver imp* b*) (parse-library (car e))))
-              (let-values (((lib* invoke-code macro* export-subst export-env) 
+              (let-values (((lib* invoke-code macro* export-subst export-env)
                             (top-level-expander (cons (cons 'import imp*) b*))))
                 (values export-subst export-env invoke-code)))
             (let-values (((lib* invoke-code macro* export-subst export-env) (top-level-expander e)))
