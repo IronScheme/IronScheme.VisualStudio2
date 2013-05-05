@@ -29,7 +29,7 @@ namespace IronScheme.VisualStudio.REPL
     {
       if (null == buffer)
       {
-        throw new ArgumentNullException("lines");
+        throw new ArgumentNullException("buffer");
       }
       textBuffer = buffer;
       byteBuffer = new byte[bufferSize];

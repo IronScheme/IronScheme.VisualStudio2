@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using IronScheme.Runtime;
+using System.Windows.Forms;
 
 namespace IronScheme.VisualStudio.Common
 {
@@ -17,6 +18,19 @@ namespace IronScheme.VisualStudio.Common
       "(library-path (list {0}))".Eval(Builtins.ApplicationDirectory);
 
       var cfgpath = Path.Combine(Builtins.ApplicationDirectory, "../config.ss");
+
+      if (!File.Exists(cfgpath))
+      {
+        MessageBox.Show(new FileInfo(cfgpath).FullName, "Missing config.ss");
+        var bfd = new FolderBrowserDialog();
+        if (bfd.ShowDialog() == DialogResult.OK)
+        {
+          File.WriteAllText(cfgpath, string.Format(@"
+(library-path 
+  (append (library-path) 
+          (list ""{0}"")))", bfd.SelectedPath.Replace("\\", "/")));
+        }
+      }
 
       if (File.Exists(cfgpath))
       {

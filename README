@@ -21,7 +21,7 @@ Todo list
 
 [*] Classifier
 [*] ErrorTagger
-[*] SmartIndent
+[*] SmartIndent (need much better behavior)
 [*] Interactive window
 [ ] Outliner
 [ ] Snippets
@@ -35,7 +35,13 @@ Todo list
 Extra 'tooltips'
 ================
 
-[ ] Show import location (perhaps 'goto definition')
+[ ] Show import location (perhaps 'goto definition' and maybe add for imported methods too, if source is available)
 [ ] Procedure info for those defined in the source code (currently only hightlighted)
 [ ] Info for locals (perhaps arrows like DrRacket does?)
+
+Parser improvements
+===================
+
+[ ] Fault tolerant parsing
+[ ] Missing syntax completion (specifically parentheses)
 
