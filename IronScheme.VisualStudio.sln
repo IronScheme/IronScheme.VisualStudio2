@@ -1,21 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronScheme.VisualStudio", "IronScheme.VisualStudio\IronScheme.VisualStudio.csproj", "{B3B78D50-29A1-4012-B2A7-5C9945C201B1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronScheme.VisualStudio.REPL", "IronScheme.VisualStudio.REPL\IronScheme.VisualStudio.REPL.csproj", "{2AEA2177-08B0-4492-B911-CCEA5B4C33A0}"
-EndProject
+# Visual Studio 14
+VisualStudioVersion = 14.0.22310.1
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{AEF7FCD9-6DB7-4598-9211-C7ABE795A446}"
 	ProjectSection(SolutionItems) = preProject
 		libs\IronScheme.dll = libs\IronScheme.dll
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronScheme.VisualStudio.Common", "IronScheme.VisualStudio.Common\IronScheme.VisualStudio.Common.csproj", "{15CC7371-BD37-4432-8B03-0A8E877B1018}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3F8C8CD1-C166-4A83-A781-4BE920A56761}"
 	ProjectSection(SolutionItems) = preProject
 		README = README
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronScheme.VisualStudio", "IronScheme.VisualStudio\IronScheme.VisualStudio.csproj", "{B3B78D50-29A1-4012-B2A7-5C9945C201B1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronScheme.VisualStudio.REPL", "IronScheme.VisualStudio.REPL\IronScheme.VisualStudio.REPL.csproj", "{2AEA2177-08B0-4492-B911-CCEA5B4C33A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronScheme.VisualStudio.Common", "IronScheme.VisualStudio.Common\IronScheme.VisualStudio.Common.csproj", "{15CC7371-BD37-4432-8B03-0A8E877B1018}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
