@@ -1,7 +1,9 @@
 New VS addin
 ============
 
-Rewritten from scratch. Only runs on VS2012 for now.
+Rewritten from scratch. Only runs on VS2019 for now.
+
+Add 'https://ci.appveyor.com/nuget/ironscheme' as a nuget feed
 
 Configuration
 =============

@@ -28,3 +28,4 @@ _ReSharper*/
 IronScheme.VisualStudio.sln.ide/*.*
 UpgradeLog.htm
 /.vs/IronScheme.VisualStudio/v16/Server/sqlite3
+/packages/**
