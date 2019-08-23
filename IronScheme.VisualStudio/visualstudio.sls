@@ -77,8 +77,8 @@
             
   (define (read-imports content)
     (map 
-      (lambda (i)
-        (if (annotation? i) (annotation-stripped i) i))
+      (lambda (i) i)
+        ;(if (annotation? i) (annotation-stripped i) i))
       (if (null? (cdr content))
           (let-values (((name ver imp* b*) (parse-library (car content))))
             imp*)
