@@ -76,11 +76,8 @@
       (e)))
             
   (define (read-imports content)
-    (map 
-      (lambda (i) i)
-        ;(if (annotation? i) (annotation-stripped i) i))
-      (if (null? (cdr content))
-          (let-values (((name ver imp* b*) (parse-library (car content))))
-            imp*)
-          (let-values (((imp* b*) (parse-top-level-program content)))
-            imp*)))))
+    (if (null? (cdr content))
+        (let-values (((name ver imp* b*) (parse-library (car content))))
+          imp*)
+        (let-values (((imp* b*) (parse-top-level-program content)))
+          imp*))))
