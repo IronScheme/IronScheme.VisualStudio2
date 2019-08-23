@@ -108,6 +108,10 @@ namespace IronScheme.VisualStudio
                 new SnapshotSpan(start, s.yylloc.eCol - s.yylloc.sCol),
                 new SchemeTag(t) { ErrorMessage = s.ErrorMessage });
             }
+            else
+            {
+              break;
+            }
           }
 
           var stack = s.Stack;
