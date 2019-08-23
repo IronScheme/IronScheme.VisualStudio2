@@ -34,7 +34,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IronScheme, Version=1.0.0.0, Culture=neutral, PublicKeyToken=78f2e9d9541a0dee, processorArchitecture=MSIL">
-      <HintPath>..\packages\IronScheme.Core.1.0.140\lib\IronScheme.dll</HintPath>
+      <HintPath>..\packages\IronScheme.Core.1.0.141\lib\IronScheme.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
