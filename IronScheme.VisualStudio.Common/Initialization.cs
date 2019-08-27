@@ -36,8 +36,14 @@ namespace IronScheme.VisualStudio.Common
       {
         string.Format("(include \"{0}\")", cfgpath.Replace('\\', '/')).Eval();
       }
-
+#if DEBUG
+      "(debug-mode? #t)".Eval();
+#endif
       "(import (visualstudio))".Eval();
+#if DEBUG
+     // "(compile)".Eval();
+#endif
+
       return true;
     }
   }

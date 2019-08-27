@@ -49,30 +49,37 @@ namespace IronScheme.VisualStudio
 
     void buffer_Changed(object sender, TextContentChangedEventArgs e)
     {
-      foreach (var chg in e.Changes)
+      try
       {
-        if (chg.LineCountDelta == 0)
+        foreach (var chg in e.Changes)
         {
-          continue;
-        }
-        else if (chg.LineCountDelta > 0)
-        {
-          var ss = buffer.CurrentSnapshot;
-          for (int i = 0; i < chg.LineCountDelta; i++)
+          if (chg.LineCountDelta == 0)
           {
-            int linenr = ss.GetLineNumberFromPosition(chg.NewPosition);
-            states.Insert(linenr + i, DEFAULTSTATE);
+            continue;
+          }
+          else if (chg.LineCountDelta > 0)
+          {
+            var ss = buffer.CurrentSnapshot;
+            for (int i = 0; i < chg.LineCountDelta; i++)
+            {
+              int linenr = ss.GetLineNumberFromPosition(chg.NewPosition);
+              states.Insert(linenr + i, DEFAULTSTATE);
+            }
+          }
+          else
+          {
+            var ss = buffer.CurrentSnapshot;
+            for (int i = 0; i > chg.LineCountDelta; i--)
+            {
+              int linenr = ss.GetLineNumberFromPosition(chg.NewPosition);
+              states.RemoveAt(linenr - i);
+            }
           }
         }
-        else
-        {
-          var ss = buffer.CurrentSnapshot;
-          for (int i = 0; i > chg.LineCountDelta; i--)
-          {
-            int linenr = ss.GetLineNumberFromPosition(chg.NewPosition);
-            states.RemoveAt(linenr - i);
-          }
-        }
+      }
+      catch (ArgumentOutOfRangeException)
+      {
+
       }
     }
 
