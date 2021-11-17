@@ -1,8 +1,8 @@
 ﻿using System.Reflection;
 using System.Runtime.CompilerServices;
-using Microsoft.VisualStudio.ExtensibilityHosting;
+//using Microsoft.VisualStudio.ExtensibilityHosting;
 
-[assembly: VsCatalogName("Microsoft.VisualStudio.Editor")]
+//[assembly: VsCatalogName("Microsoft.VisualStudio.Editor")]
 //
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
