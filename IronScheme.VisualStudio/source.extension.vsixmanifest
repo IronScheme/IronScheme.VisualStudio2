@@ -1,29 +1,29 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
-  <Metadata>
-    <Identity Id="IronScheme.VisualStudio.19d3eb0d-b002-44a4-87f2-7d5f5b55c135" Version="1.999.0.21" Language="en-US" Publisher="leppie" />
-    <DisplayName>IronScheme.VisualStudio</DisplayName>
-    <Description>IronScheme editor extensions for Visual Studio</Description>
-    <MoreInfo>http://ironscheme.codeplex.com</MoreInfo>
-    <License>license.txt</License>
-    <Icon>ironscheme.ico</Icon>
-    <PreviewImage>logo-192.png</PreviewImage>
-    <Tags>ironscheme</Tags>
-  </Metadata>
-  <Installation>
-    <InstallationTarget Version="[11.0,17.0)" Id="Microsoft.VisualStudio.Community" />
-    <InstallationTarget Version="[17.0,18.0)" Id="Microsoft.VisualStudio.Community">
-      <ProductArchitecture>amd64</ProductArchitecture>
-    </InstallationTarget>
-  </Installation>
-  <Dependencies>
-    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="4.7.2" />
-  </Dependencies>
-  <Assets>
-    <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%|" />
-    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%.REPL" Path="|IronScheme.VisualStudio.REPL;PkgdefProjectOutputGroup|" />
-  </Assets>
-  <Prerequisites>
-    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[16.0,18.0)" DisplayName="Visual Studio core editor" />
-  </Prerequisites>
+    <Metadata>
+        <Identity Id="IronScheme.VisualStudio.19d3eb0d-b002-44a4-87f2-7d5f5b55c135" Version="1.999.0.22" Language="en-US" Publisher="leppie" />
+        <DisplayName>IronScheme.VisualStudio</DisplayName>
+        <Description xml:space="preserve">IronScheme editor extensions for Visual Studio</Description>
+        <MoreInfo>http://ironscheme.codeplex.com</MoreInfo>
+        <License>license.txt</License>
+        <Icon>ironscheme.ico</Icon>
+        <PreviewImage>logo-192.png</PreviewImage>
+        <Tags>ironscheme</Tags>
+    </Metadata>
+    <Installation>
+        <InstallationTarget Version="[11.0,17.0)" Id="Microsoft.VisualStudio.Community" />
+        <InstallationTarget Version="[17.0,18.0)" Id="Microsoft.VisualStudio.Community">
+            <ProductArchitecture>amd64</ProductArchitecture>
+        </InstallationTarget>
+    </Installation>
+    <Dependencies>
+        <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="4.7.2" />
+    </Dependencies>
+    <Assets>
+        <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%|" />
+        <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%.REPL" Path="|IronScheme.VisualStudio.REPL;PkgdefProjectOutputGroup|" />
+    </Assets>
+    <Prerequisites>
+        <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[16.0,18.0)" DisplayName="Visual Studio core editor" />
+    </Prerequisites>
 </PackageManifest>
