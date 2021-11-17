@@ -69,8 +69,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="IronScheme, Version=1.0.0.0, Culture=neutral, PublicKeyToken=78f2e9d9541a0dee, processorArchitecture=MSIL">
-      <HintPath>..\packages\IronScheme.Core.1.0.171\lib\IronScheme.dll</HintPath>
+      <HintPath>..\packages\IronScheme.Core.1.0.256\lib\IronScheme.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\VS\Microsoft.VisualStudio.ComponentModelHost.dll</HintPath>
@@ -152,6 +153,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="source.extension.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>source.extension.vsixmanifest</DependentUpon>
+    </Compile>
     <Compile Include="TextBufferStream.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -164,7 +170,10 @@
     <Content Include="logo.png" />
     <Content Include="Resources\Package.ico" />
     <None Include="packages.config" />
-    <None Include="source.extension.vsixmanifest" />
+    <None Include="source.extension.vsixmanifest">
+      <Generator>VsixManifestGenerator</Generator>
+      <LastGenOutput>source.extension.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources.resx">

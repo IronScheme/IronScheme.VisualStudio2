@@ -123,7 +123,7 @@ namespace IronScheme.VisualStudio
 
       syntax = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
       procedure = registry.GetClassificationType("line number");
-      record = registry.GetClassificationType(PredefinedClassificationTypeNames.Type);
+      record = registry.GetClassificationType(PredefinedClassificationTypeNames.SymbolDefinition);
 
       _buffer.Properties["SchemeBindings"] = bindings;
 
