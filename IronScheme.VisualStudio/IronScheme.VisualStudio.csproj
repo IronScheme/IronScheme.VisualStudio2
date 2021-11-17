@@ -68,6 +68,9 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="IronScheme.FrameworkPAL">
+      <HintPath>..\libs\IronScheme.FrameworkPAL.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -148,7 +151,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="IronScheme.Core">
-      <Version>1.0.197</Version>
+      <Version>1.0.256</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.SDK" Version="17.0.0-previews-4-31709-430" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.0.5232" />
