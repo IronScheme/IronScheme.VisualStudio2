@@ -60,6 +60,7 @@ namespace IronScheme.VisualStudio.REPL
     /// </summary>
     protected override void Initialize()
     {
+      ThreadHelper.ThrowIfNotOnUIThread();
       // Always call the base implementation of Initialize.
       base.Initialize();
 
@@ -93,6 +94,7 @@ namespace IronScheme.VisualStudio.REPL
     /// </summary>
     void ShowConsole(object sender, EventArgs e)
     {
+      ThreadHelper.ThrowIfNotOnUIThread();
       // FindToolWindow will search for this window and, because the 'create' flag
       // is set to true, will create a new instance if it can not find it.
       ToolWindowPane pane = this.FindToolWindow(typeof(ConsoleWindow), 0, true);

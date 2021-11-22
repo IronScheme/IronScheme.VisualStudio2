@@ -4,8 +4,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using IronScheme.Runtime;
 using System.Windows.Forms;
+using IronScheme.Runtime;
+using Microsoft.VisualStudio.PlatformUI;
 
 namespace IronScheme.VisualStudio.Common
 {
@@ -15,13 +16,15 @@ namespace IronScheme.VisualStudio.Common
 
     static bool Initialize()
     {
+      var ap = AppDomain.CurrentDomain;//.Load("");
       "(library-path (list {0}))".Eval(Builtins.ApplicationDirectory);
 
       var cfgpath = Path.Combine(Builtins.ApplicationDirectory, "../config.ss");
 
       if (!File.Exists(cfgpath))
       {
-        MessageBox.Show(new FileInfo(cfgpath).FullName, "Missing config.ss");
+        var result = MessageDialog.Show("Missing config.ss", new FileInfo(cfgpath).FullName, MessageDialogCommandSet.Ok);
+        
         var bfd = new FolderBrowserDialog();
         if (bfd.ShowDialog() == DialogResult.OK)
         {

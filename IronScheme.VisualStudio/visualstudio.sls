@@ -19,7 +19,7 @@
         (if (eof-object? expr)
             #f
             expr))))
-
+ 
   (define (read-definitions subst env invoke-code)
     (let ((lookup (make-eq-hashtable))
           (bindings (make-eq-hashtable)))

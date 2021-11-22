@@ -56,6 +56,7 @@ namespace IronScheme.VisualStudio
 
     public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
     {
+      Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
       bool handled = false;
       bool updateFilter = false;
       bool previousSessionActive = (_currentSession != null);
@@ -167,6 +168,7 @@ namespace IronScheme.VisualStudio
 
     public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText)
     {
+      Microsoft.VisualStudio.Shell.ThreadHelper.ThrowIfNotOnUIThread();
       if (pguidCmdGroup == VSConstants.VSStd2K)
       {
         switch ((VSConstants.VSStd2KCmdID)prgCmds[0].cmdID)

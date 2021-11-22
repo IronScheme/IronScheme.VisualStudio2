@@ -65,7 +65,9 @@ namespace IronScheme.VisualStudio.REPL
     /// </summary>
     public ConsoleWindow() :
       this(new ServiceProvider((IOleServiceProvider)SchemeConsolePackage.GetGlobalService(typeof(IOleServiceProvider))))
-    { }
+    {
+      ThreadHelper.ThrowIfNotOnUIThread();
+    }
 
     /// <summary>
     /// Creates a new ConsoleWindow object.
@@ -84,6 +86,7 @@ namespace IronScheme.VisualStudio.REPL
 
     protected override void Initialize()
     {
+      ThreadHelper.ThrowIfNotOnUIThread();
       base.Initialize();
 
       IComponentModel compMod = GetService(typeof(SComponentModel)) as IComponentModel;
@@ -152,6 +155,7 @@ namespace IronScheme.VisualStudio.REPL
     /// </summary>
     protected override void Dispose(bool disposing)
     {
+      ThreadHelper.ThrowIfNotOnUIThread();
       try
       {
         if (disposing)
@@ -234,6 +238,7 @@ namespace IronScheme.VisualStudio.REPL
     /// </summary>
     public override void OnToolWindowCreated()
     {
+      ThreadHelper.ThrowIfNotOnUIThread();
       // Call the base class's implementation.
       base.OnToolWindowCreated();
 
@@ -540,6 +545,7 @@ namespace IronScheme.VisualStudio.REPL
 
     void ShowContextMenu(object sender, EventArgs args)
     {
+      ThreadHelper.ThrowIfNotOnUIThread();
       // Get a reference to the UIShell.
       IVsUIShell uiShell = globalProvider.GetService(typeof(SVsUIShell)) as IVsUIShell;
       if (null == uiShell)

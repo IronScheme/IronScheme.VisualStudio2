@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using IronScheme.Compiler;
 using IronScheme.Runtime;
 using IronScheme.Scripting;
+using IronScheme.VisualStudio.Common;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
@@ -20,6 +21,15 @@ namespace IronScheme.VisualStudio
   [TagType(typeof(ErrorTag))]
   class ErrorTaggerProvider : IViewTaggerProvider
   {
+    public ErrorTaggerProvider()
+    {
+      var b = ClassificationTagger.bindings;
+      if (b is null)
+      {
+        throw new InvalidOperationException("binding is null");
+      }
+    }
+
     [Import]
     internal IBufferTagAggregatorFactoryService aggregatorFactory = null;
 
@@ -67,7 +77,6 @@ namespace IronScheme.VisualStudio
       textDocumentFactory.TryGetTextDocument(_buffer, out _document);
 
       _errorProvider = new ErrorListProvider(svcp);
-
 
       BufferIdleEventUtil.AddBufferIdleEventListener(_buffer, ReparseFile);
     }
@@ -204,74 +213,86 @@ namespace IronScheme.VisualStudio
       {
         var port = new TextSnapshotToTextReader(snapshot);
 
-        var prevbindings = _buffer.Properties["SchemeBindings"];
-
-        try
+        _buffer.Properties.TryGetProperty("SchemeBindings", out object prevbindings);
         {
-          var result = "(read-file {0})".Eval(port);
-
-          if (result == null)
+          try
           {
-            return;
-          }
+            var result = "(read-file {0})".Eval(port);
 
-          var imports = "(read-imports {0})".Eval(result);
-          var env = "(apply environment {0})".Eval(imports);
-
-          _buffer.Properties["SchemeEnvironment"] = env;
-
-          var b = "(environment-bindings {0})".Eval(env);
-
-          var bindings = ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), GetBindingType);
-          
-          _buffer.Properties["SchemeBindings"] = bindings;
-
-          var expanded = "(run-expansion {0})".Eval<MultipleValues>(result).ToArray(3);
-          var names = expanded[0] as object[];
-          var types = expanded[1] as object[];
-          var output = expanded[2];
-
-          for (int i = 0; i < names.Length; i++)
-          {
-            if (names[i] is SymbolId)
+            if (result == null)
             {
-              var name = SymbolTable.IdToString((SymbolId) names[i]);
-              // ignore lst
-              int foo;
-              if (name == "using" || name == "dummy" || int.TryParse(name, out foo))
+              return;
+            }
+
+            var imports = "(read-imports {0})".Eval(result);
+            var env = "(apply environment {0})".Eval(imports);
+
+            _buffer.Properties["SchemeEnvironment"] = env;
+
+            var b = "(environment-bindings {0})".Eval(env);
+
+            var bindings = ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), GetBindingType);
+
+            _buffer.Properties["SchemeBindings"] = bindings;
+
+            var expanded = "(run-expansion {0})".Eval<MultipleValues>(result).ToArray(3);
+            var names = expanded[0] as object[];
+            var types = expanded[1] as object[];
+            var output = expanded[2];
+
+            for (int i = 0; i < names.Length; i++)
+            {
+              if (names[i] is SymbolId)
               {
-                continue;
+                var name = SymbolTable.IdToString((SymbolId)names[i]);
+                // ignore lst
+                int foo;
+                if (name == "using" || name == "dummy" || int.TryParse(name, out foo))
+                {
+                  continue;
+                }
+                bindings[name] = GetBindingType2(types[i]) | BindingType.LocalMask;
               }
-              bindings[name] = GetBindingType2(types[i]) | BindingType.LocalMask;
             }
           }
-        }
-        catch (SchemeException ex)
-        {
-          _buffer.Properties["SchemeBindings"] = prevbindings;
-          var cond = ex.Condition;
-          var error = "(get-error {0})".Eval<MultipleValues>(cond).ToArray(2);
-          var errtag = new ErrorTag(PredefinedErrorTypeNames.CompilerError, error[0]);
-          var errspan = new SnapshotSpan(snapshot, 0,0);
-          if (error[1] is string)
+          catch (SchemeException ex)
           {
-            errspan = MakeSnapshotSpan(snapshot, error[1] as string);
-            syntax_error = new TagSpan<ErrorTag>(errspan, errtag);
+            _buffer.Properties["SchemeBindings"] = prevbindings;
+            var cond = ex.Condition;
+            var error = "(get-error {0})".Eval<MultipleValues>(cond).ToArray(2);
+            var errtag = new ErrorTag(PredefinedErrorTypeNames.CompilerError, error[0]);
+            var errspan = new SnapshotSpan(snapshot, 0, 0);
+            if (error[1] is string)
+            {
+              errspan = MakeSnapshotSpan(snapshot, error[1] as string);
+              syntax_error = new TagSpan<ErrorTag>(errspan, errtag);
+            }
+            AddErrorTask(errspan, errtag);
+
           }
-          AddErrorTask(errspan, errtag);
+          catch (Exception ex)
+          {
+            _buffer.Properties["SchemeBindings"] = prevbindings;
+            var errtag = new ErrorTag(PredefinedErrorTypeNames.CompilerError, ex.ToString());
+            var errspan = new SnapshotSpan(snapshot, 0, 0);
+
+            AddErrorTask(errspan, errtag);
+          }
+
+          var lines = _view.TextViewLines.ToArray();
+
+          var start = lines[0].Start;
+          var end = lines[lines.Length - 1].End;
+
+          var span = new SnapshotSpan(start, end);
+
+          // notifiy classifier
+          if (_buffer.Properties.TryGetProperty<ClassificationTagger>(typeof(ITagger<IClassificationTag>), out var classifier))
+          {
+            classifier.RaiseTagsChanged(span);
+          }
           
         }
-
-        var lines = _view.TextViewLines.ToArray();
-
-        var start = lines[0].Start;
-        var end = lines[lines.Length - 1].End;
-
-        var span = new SnapshotSpan(start, end);
-
-        // notifiy classifier
-        var classifier = _buffer.Properties[typeof(ITagger<IClassificationTag>)] as ClassificationTagger;
-        classifier.RaiseTagsChanged(span);
       }
 
       if (TagsChanged != null)

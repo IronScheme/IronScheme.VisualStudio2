@@ -21,9 +21,17 @@ namespace IronScheme.VisualStudio
   [TagType(typeof(ClassificationTag))]
   internal class ClassificationTaggerProvider : IViewTaggerProvider
   {
+    public ClassificationTaggerProvider()
+    {
+      var b = ClassificationTagger.bindings;
+      if (b is null)
+      {
+        throw new InvalidOperationException("binding is null");
+      }
+    }
+
     [Export]
     [Name("scheme")]
-    [DisplayName("scheme")]
     [BaseDefinition("code")]
     public static ContentTypeDefinition SchemeContentType = null;
 
@@ -74,15 +82,19 @@ namespace IronScheme.VisualStudio
     ITextBuffer _buffer;
     IDictionary<Tokens, IClassificationType> _schemeTokenTypes = new Dictionary<Tokens, IClassificationType>();
     IClassificationType syntax, procedure, record;
-    static readonly Dictionary<string, BindingType> bindings = new Dictionary<string, BindingType>(1000);
+    internal static readonly Dictionary<string, BindingType> bindings = GetDefaultBindings();
     static readonly HashSet<string> library_keywords = new HashSet<string>(new string[] { "library", "export", "import", "only", "except", "rename", "prefix" });
 
-    static ClassificationTagger()
+    static Dictionary<string, BindingType> GetDefaultBindings()
     {
-      var b = "(environment-bindings (environment '(ironscheme)))".Eval();
-      bindings = ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), GetBindingType);
-
       var t = Initialization.Complete;
+      if (!t)
+      {
+        throw new InvalidOperationException("init not completed");
+      }
+
+      var b = "(environment-bindings (environment '(ironscheme)))".Eval();
+      return ((Cons)b).ToDictionary(x => (((Cons)x).car).ToString(), GetBindingType);
     }
 
     static BindingType GetBindingType(object x)
@@ -122,8 +134,8 @@ namespace IronScheme.VisualStudio
       _schemeTokenTypes[Tokens.MLSTRING] = registry.GetClassificationType(PredefinedClassificationTypeNames.String);
 
       syntax = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
-      procedure = registry.GetClassificationType("line number");
-      record = registry.GetClassificationType(PredefinedClassificationTypeNames.SymbolDefinition);
+      procedure = registry.GetClassificationType(PredefinedClassificationTypeNames.SymbolDefinition);
+      record = registry.GetClassificationType(PredefinedClassificationTypeNames.Type);
 
       _buffer.Properties["SchemeBindings"] = bindings;
 
