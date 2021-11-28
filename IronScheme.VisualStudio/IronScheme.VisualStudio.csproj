@@ -30,7 +30,7 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <InstallRoot>Default</InstallRoot>
-    <Ngen>true</Ngen>
+    <Ngen>false</Ngen>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -89,10 +89,9 @@
     <Compile Include="BraceMatchingTagger.cs" />
     <Compile Include="BufferIdleEventUtil.cs" />
     <Compile Include="ClassificationTagger.cs" />
-    <Compile Include="ErrorTagger.cs" />
-    <Compile Include="QuickInfo.cs" />
+    <Compile Include="Errors\ErrorTagger.cs" />
+    <Compile Include="Errors\ErrorTaggerProvider.cs" />
     <Compile Include="QuickInfoSource.cs" />
-    <Compile Include="SchemeCompletionHandlerProvider.cs" />
     <Compile Include="SchemeCompletionSource.cs" />
     <Compile Include="SchemeTagger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -102,6 +101,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>source.extension.vsixmanifest</DependentUpon>
     </Compile>
+    <Compile Include="Errors\ErrorsSnapshot.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\IronScheme.VisualStudio.REPL\bin\Debug\IronScheme.VisualStudio.REPL.pkgdef">
@@ -161,8 +161,14 @@
     <PackageReference Include="IronScheme.Core">
       <Version>1.0.264</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.ImageCatalog">
+      <Version>16.10.31320.204</Version>
+    </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.SDK" Version="16.10.31321.278" ExcludeAssets="runtime">
       <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Validation">
+      <Version>16.10.35</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.VSSDK.BuildTools" Version="17.0.5232" />
   </ItemGroup>

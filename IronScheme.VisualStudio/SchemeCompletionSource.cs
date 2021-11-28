@@ -1,124 +1,163 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using IronScheme.Runtime;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
+using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Text.Adornments;
+using Microsoft.VisualStudio.Core.Imaging;
 
 namespace IronScheme.VisualStudio
 {
-  [Export(typeof(ICompletionSourceProvider))]
+  [Export(typeof(IAsyncCompletionSourceProvider))]
   [ContentType("scheme")]
   [Name("token completion")]
-  class SchemeCompletionSourceProvider : ICompletionSourceProvider
+  class SchemeCompletionSourceProvider : IAsyncCompletionSourceProvider
   {
     [Import]
     internal ITextStructureNavigatorSelectorService NavigatorService { get; set; }
 
-    public ICompletionSource TryCreateCompletionSource(ITextBuffer textBuffer)
+    public IAsyncCompletionSource GetOrCreate(ITextView textView)
     {
-      return new SchemeCompletionSource(this, textBuffer);
+        return new SchemeCompletionSource(this);
     }
   }
 
-  class SchemeCompletionSource : ICompletionSource
+  class SchemeCompletionSource : IAsyncCompletionSource
   {
     SchemeCompletionSourceProvider m_sourceProvider;
-    ITextBuffer m_textBuffer;
-    List<Completion> m_compList;
-    static ImageSource syntax_image, procedure_image;
 
-    static SchemeCompletionSource()
-    {
-      var ass = typeof(SchemeCompletionSource).Assembly;
-      var img = new PngBitmapDecoder(ass.GetManifestResourceStream("IronScheme.VisualStudio.Resources.CodeField.png"),
-        BitmapCreateOptions.None, BitmapCacheOption.Default);
-      syntax_image = img.Frames[0];
-      img = new PngBitmapDecoder(ass.GetManifestResourceStream("IronScheme.VisualStudio.Resources.CodeMethod.png"),
-        BitmapCreateOptions.None, BitmapCacheOption.Default);
-      procedure_image = img.Frames[0];
-    }
-
-    public SchemeCompletionSource(SchemeCompletionSourceProvider sourceProvider, ITextBuffer textBuffer)
+    public SchemeCompletionSource(SchemeCompletionSourceProvider sourceProvider)
     {
       m_sourceProvider = sourceProvider;
-      m_textBuffer = textBuffer;
     }
 
-    void ICompletionSource.AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets)
+    private SnapshotSpan FindTokenSpanAtPosition(SnapshotPoint triggerLocation)
     {
-      ITextSnapshot snapshot = m_textBuffer.CurrentSnapshot;
-      SnapshotPoint? triggerPoint = session.GetTriggerPoint(snapshot);
-      if (triggerPoint == null)
+      // This method is not really related to completion,
+      // we mostly work with the default implementation of ITextStructureNavigator 
+      // You will likely use the parser of your language
+      ITextStructureNavigator navigator = m_sourceProvider.NavigatorService.GetTextStructureNavigator(triggerLocation.Snapshot.TextBuffer);
+      TextExtent extent = navigator.GetExtentOfWord(triggerLocation);
+      if (triggerLocation.Position > 0 && (!extent.IsSignificant || !extent.Span.GetText().Any(c => char.IsLetterOrDigit(c))))
       {
-        return;
-      }
-      SnapshotPoint end = triggerPoint.Value;
-      SnapshotPoint start = end;
-      // go back to either a delimiter, a whitespace char or start of line.
-      while (start > 0)
-      {
-        SnapshotPoint prev = start - 1;
-        if (IsWhiteSpaceOrDelimiter(prev.GetChar()))
-        {
-          break;
-        }
-        start += -1;
+        // Improves span detection over the default ITextStructureNavigation result
+        extent = navigator.GetExtentOfWord(triggerLocation - 1);
       }
 
-      var span = new SnapshotSpan(start, end);
-      // The ApplicableTo span is what text will be replaced by the completion item
-      ITrackingSpan applicableTo = snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
+      var tokenSpan = triggerLocation.Snapshot.CreateTrackingSpan(extent.Span, SpanTrackingMode.EdgeInclusive);
 
-      var bindings = m_textBuffer.Properties["SchemeBindings"] as Dictionary<string, BindingType>;
-
-      m_compList = new List<Completion>();
-
-      foreach (string key in bindings.Keys.OrderBy(x => x))
+      var snapshot = triggerLocation.Snapshot;
+      var tokenText = tokenSpan.GetText(snapshot);
+      if (string.IsNullOrWhiteSpace(tokenText))
       {
-        var str = key;
-        var v = bindings[key];
-        if (v != BindingType.Record)
-        {
-          m_compList.Add(new Completion(str, str, v.ToString(), v == BindingType.Procedure ? procedure_image : syntax_image, null));
-        }
+        // The token at this location is empty. Return an empty span, which will grow as user types.
+        return new SnapshotSpan(triggerLocation, 0);
       }
 
-      completionSets.Add(new CompletionSet(
-          "Tokens",    //the non-localized title of the tab
-          "Tokens",    //the display title of the tab
-          applicableTo,
-          m_compList,
-          null));
-    }
+      // Trim quotes and new line characters.
+      int startOffset = 0;
+      int endOffset = 0;
 
-    static bool IsWhiteSpaceOrDelimiter(char p)
-    {
-      switch (p)
+      if (tokenText.Length > 0)
       {
-        case '(':
-        case '[':
-        case ' ':
-          return true;
+        if (tokenText.StartsWith("\""))
+          startOffset = 1;
       }
-      return false;
-    }
+      if (tokenText.Length - startOffset > 0)
+      {
+        if (tokenText.EndsWith("\"\r\n"))
+          endOffset = 3;
+        else if (tokenText.EndsWith("\r\n"))
+          endOffset = 2;
+        else if (tokenText.EndsWith("\"\n"))
+          endOffset = 2;
+        else if (tokenText.EndsWith("\n"))
+          endOffset = 1;
+        else if (tokenText.EndsWith("\""))
+          endOffset = 1;
+      }
 
-    ITrackingSpan FindTokenSpanAtPosition(ITrackingPoint point, ICompletionSession session)
-    {
-      SnapshotPoint currentPoint = (session.TextView.Caret.Position.BufferPosition) - 1;
-      ITextStructureNavigator navigator = m_sourceProvider.NavigatorService.GetTextStructureNavigator(m_textBuffer);
-      TextExtent extent = navigator.GetExtentOfWord(currentPoint);
-      return currentPoint.Snapshot.CreateTrackingSpan(extent.Span, SpanTrackingMode.EdgeInclusive);
+      return new SnapshotSpan(tokenSpan.GetStartPoint(snapshot) + startOffset, tokenSpan.GetEndPoint(snapshot) - endOffset);
     }
 
     public void Dispose()
     {
 
+    }
+
+    Dictionary<string, BindingType> cache = new Dictionary<string, BindingType>();
+
+    public async Task<CompletionContext> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerLocation, SnapshotSpan applicableToSpan, CancellationToken token)
+    {
+      var ss = triggerLocation.Snapshot;
+      var buffer = ss.TextBuffer;
+
+      cache = buffer.Properties["SchemeBindings"] as Dictionary<string, BindingType>;
+
+      var items = new List<CompletionItem>();
+
+      foreach (string key in cache.Keys.OrderBy(x => x))
+      {
+        var str = key;
+        var v = cache[key];
+        if (v != BindingType.Record)
+        {
+          var icon = new ImageElement((v == BindingType.Procedure ? KnownMonikers.Method : KnownMonikers.Class).ToImageId());
+          items.Add(new CompletionItem(str, this, icon));// str, v.ToString(), v == BindingType.Procedure ? procedure_image : syntax_image, null));
+        }
+      }
+
+      var cc = new CompletionContext(items.ToImmutableArray());
+      return cc;
+    }
+
+    public async Task<object> GetDescriptionAsync(IAsyncCompletionSession session, CompletionItem item, CancellationToken token)
+    {
+      var text = item.DisplayText;
+      var buffer = session.ApplicableToSpan.TextBuffer;
+      var env = buffer.Properties["SchemeEnvironment"];
+
+      BindingType type;
+
+      if (cache.TryGetValue(text, out type) && type == BindingType.Procedure)
+      {
+        try
+        {
+          var proc = ("(eval '" + text + " {0})").Eval(env);
+          var forms = "(get-forms {0} {1})".Eval<string>(proc, text).Trim();
+
+          return forms;
+        }
+        catch (SchemeException ex)
+        {
+        }
+      }
+
+      return null;
+    }
+
+    public CompletionStartData InitializeCompletion(CompletionTrigger trigger, SnapshotPoint triggerLocation, CancellationToken token)
+    {
+      if (trigger.Reason != CompletionTriggerReason.InvokeAndCommitIfUnique)
+      {
+        return CompletionStartData.DoesNotParticipateInCompletion;
+      }
+
+      var tokenSpan = FindTokenSpanAtPosition(triggerLocation);
+      return new CompletionStartData(CompletionParticipation.ProvidesItems, tokenSpan);
     }
   }
 

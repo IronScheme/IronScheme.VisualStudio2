@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using IronScheme.Compiler;
 using IronScheme.Runtime;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -10,24 +12,25 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace IronScheme.VisualStudio
 {
-  [Export(typeof(IQuickInfoSourceProvider))]
+  [Export(typeof(IAsyncQuickInfoSourceProvider))]
   [ContentType("scheme")]
   [Name("SchemeTokenQuickInfoSource")]
-  class SchemeTokenQuickInfoSourceProvider : IQuickInfoSourceProvider
+  class SchemeTokenQuickInfoSourceProvider : IAsyncQuickInfoSourceProvider
   {
     [Import]
     IBufferTagAggregatorFactoryService aggService = null;
 
-    public IQuickInfoSource TryCreateQuickInfoSource(ITextBuffer textBuffer)
+    public IAsyncQuickInfoSource TryCreateQuickInfoSource(ITextBuffer textBuffer)
     {
-      return new SchemeTokenQuickInfoSource(textBuffer, aggService.CreateTagAggregator<SchemeTag>(textBuffer));
+      return textBuffer.Properties.GetOrCreateSingletonProperty(
+        () => new SchemeTokenQuickInfoSource(textBuffer, aggService.CreateTagAggregator<SchemeTag>(textBuffer)));
     }
   }
 
   /// <summary>
   /// Provide QuickInfo text for pkgdef string-substitution tokens
   /// </summary>
-  class SchemeTokenQuickInfoSource : IQuickInfoSource
+  class SchemeTokenQuickInfoSource : IAsyncQuickInfoSource
   {
     ITagAggregator<SchemeTag> _aggregator;
     ITextBuffer _buffer;
@@ -38,14 +41,17 @@ namespace IronScheme.VisualStudio
       _buffer = buffer;
     }
 
-    public void AugmentQuickInfoSession(IQuickInfoSession session, IList<object> quickInfoContent, out ITrackingSpan applicableToSpan)
+    public void Dispose()
     {
-      applicableToSpan = null;
+      
+    }
 
+    public Task<QuickInfoItem> GetQuickInfoItemAsync(IAsyncQuickInfoSession session, CancellationToken cancellationToken)
+    {
       var triggerPoint = (SnapshotPoint)session.GetTriggerPoint(_buffer.CurrentSnapshot);
 
       if (triggerPoint == null)
-        return;
+        return Task.FromResult<QuickInfoItem>(null);
 
       // find each span that looks like a token and look it up in the dictionary
       foreach (var curTag in _aggregator.GetTags(new SnapshotSpan(triggerPoint, triggerPoint)))
@@ -68,10 +74,11 @@ namespace IronScheme.VisualStudio
               try
               {
                 var proc = ("(eval '" + text + " {0})").Eval(env);
-                var forms = "(get-forms {0})".Eval<string>(proc).Trim();
+                var forms = "(get-forms {0} {1})".Eval<string>(proc, text).Trim();
 
-                applicableToSpan = _buffer.CurrentSnapshot.CreateTrackingSpan(tagSpan, SpanTrackingMode.EdgeExclusive);
-                quickInfoContent.Add(forms);
+                var applicableToSpan = _buffer.CurrentSnapshot.CreateTrackingSpan(tagSpan, SpanTrackingMode.EdgeExclusive);
+                
+                return Task.FromResult<QuickInfoItem>(new QuickInfoItem(applicableToSpan, forms));
               }
               catch (SchemeException ex)
               {
@@ -80,10 +87,8 @@ namespace IronScheme.VisualStudio
           }
         }
       }
-    }
 
-    public void Dispose()
-    {
+      return Task.FromResult<QuickInfoItem>(null);
     }
   }
 }

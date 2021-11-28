@@ -134,7 +134,7 @@ namespace IronScheme.VisualStudio
       _schemeTokenTypes[Tokens.MLSTRING] = registry.GetClassificationType(PredefinedClassificationTypeNames.String);
 
       syntax = registry.GetClassificationType(PredefinedClassificationTypeNames.Keyword);
-      procedure = registry.GetClassificationType(PredefinedClassificationTypeNames.SymbolDefinition);
+      procedure = registry.GetClassificationType(PredefinedClassificationTypeNames.SymbolReference);
       record = registry.GetClassificationType(PredefinedClassificationTypeNames.Type);
 
       _buffer.Properties["SchemeBindings"] = bindings;

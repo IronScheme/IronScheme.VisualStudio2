@@ -68,10 +68,10 @@
   (define (get-error conds)
     (values (condition-message conds) (condition-location conds)))
 
-  (define (get-forms proc)
+  (define (get-forms proc name)
     (let-values (((p e) (open-string-output-port)))
       (for-each (lambda (f)
-                  (fprintf p "~a\n" f))
+                  (fprintf p "~a\n" (cons (string->symbol name) (cdr f))))
                 (call-with-values (lambda () (procedure-form proc)) list))
       (e)))
             
