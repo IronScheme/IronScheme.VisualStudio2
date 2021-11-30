@@ -77,11 +77,10 @@ namespace IronScheme.VisualStudio
     {
       try
       {
-        var lines = snapshot.Lines.ToArray();
         var loc = ExtractLocation(location);
 
-        var start = lines[loc.Start.Line - 1].Start + (loc.Start.Column - 1);
-        var end = lines[loc.End.Line - 1].Start + (loc.End.Column - 1);
+        var start = snapshot.GetLineFromLineNumber(loc.Start.Line - 1).Start + (loc.Start.Column - 1);
+        var end = snapshot.GetLineFromLineNumber(loc.End.Line - 1).Start + (loc.End.Column - 1);
 
         return new SnapshotSpan(start, end);
       }
@@ -91,13 +90,13 @@ namespace IronScheme.VisualStudio
       }
     }
 
-    IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(Cons c)
+    IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(Cons c, SnapshotSpan span)
     {
       foreach (var item in c)
       {
         if (item is Annotation a)
         {
-          foreach (var item2 in GetTags(a))
+          foreach (var item2 in GetTags(a, span))
           {
             yield return item2;
           }
@@ -105,17 +104,17 @@ namespace IronScheme.VisualStudio
       }
     }
 
-    IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(Annotation a)
+    IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(Annotation a, SnapshotSpan s)
     {
       var span = MakeSnapshotSpan(buffer.CurrentSnapshot, (string)((Cons)a.source).cdr);
-      if (span.HasValue && span?.Start.GetContainingLine().LineNumber != span?.End.GetContainingLine().LineNumber)
+      if (span.HasValue && s.IntersectsWith(span.Value) && span?.Start.GetContainingLine().LineNumber != span?.End.GetContainingLine().LineNumber)
       {
         var header = span?.Start.GetContainingLine().GetText().Trim() + " ...";
         yield return new TagSpan<IOutliningRegionTag>(span.Value, new OutliningRegionTag(header, span?.GetText().Replace("\t", " ")));
 
         if (a.expression is Cons cc)
         {
-          foreach (var item in GetTags(cc))
+          foreach (var item in GetTags(cc, s))
           {
             yield return item;
           }
@@ -127,18 +126,21 @@ namespace IronScheme.VisualStudio
     {
       if (buffer.Properties.TryGetProperty<object>("Result", out var result))
       {
-        if (result is Cons c)
+        foreach (var span in spans)
         {
-          foreach (var item in GetTags(c))
+          if (result is Cons c)
           {
-            yield return item;
+            foreach (var item in GetTags(c, span))
+            {
+              yield return item;
+            }
           }
-        }
-        else if (result is Annotation a)
-        {
-          foreach (var item in GetTags(a))
+          else if (result is Annotation a)
           {
-            yield return item;
+            foreach (var item in GetTags(a, span))
+            {
+              yield return item;
+            }
           }
         }
       }
