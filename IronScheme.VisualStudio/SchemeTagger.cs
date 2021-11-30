@@ -36,16 +36,16 @@ namespace IronScheme.VisualStudio
     List<int[]> states = new List<int[]>();
     static readonly int[] DEFAULTSTATE = { 0 };
 
-    public SchemeTagger (ITextBuffer buffer)
-	  {
+    public SchemeTagger(ITextBuffer buffer)
+    {
       this.buffer = buffer;
-      buffer.Changed += buffer_Changed;
+      buffer.ChangedLowPriority += buffer_Changed;
 
       for (int i = 0; i < buffer.CurrentSnapshot.LineCount; i++)
       {
         states.Add(DEFAULTSTATE);
       }
-	  }
+    }
 
     void buffer_Changed(object sender, TextContentChangedEventArgs e)
     {

@@ -11,7 +11,7 @@
     (ironscheme reader))
 
   (define (parse-repl text)
-    (let ((port (open-string-input-port 
+    (let ((port (open-string-input-port
                   (string-append "(begin "
                                  text
                                  "\n)"))))
@@ -80,4 +80,6 @@
         (let-values (((name ver imp* b*) (parse-library (car content))))
           imp*)
         (let-values (((imp* b*) (parse-top-level-program content)))
-          imp*))))
+          imp*)))
+
+  (allow-library-redefinition #t))

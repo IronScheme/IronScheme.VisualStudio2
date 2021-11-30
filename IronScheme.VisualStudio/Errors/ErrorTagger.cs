@@ -186,6 +186,8 @@ namespace IronScheme.VisualStudio.Errors
               return;
             }
 
+            _buffer.Properties["Result"] = result;
+
             var imports = "(read-imports {0})".Eval(result);
             var env = "(apply environment {0})".Eval(imports);
 
@@ -241,8 +243,6 @@ namespace IronScheme.VisualStudio.Errors
             AddErrorTask(errspan, errtag);
           }
 
-          tableDataSink.AddSnapshot(_snapshot, true);
-          
           var lines = _view.TextViewLines.ToArray();
 
           var start = lines[0].Start;
@@ -256,8 +256,20 @@ namespace IronScheme.VisualStudio.Errors
             classifier.RaiseTagsChanged(span);
           }
 
+          if (_buffer.Properties.TryGetProperty<StructureTagger>(typeof(ITagger<IStructureTag>), out var structure))
+          {
+            structure.RaiseTagsChanged(span);
+          }
+
+          if (_buffer.Properties.TryGetProperty<OutlineTagger>(typeof(ITagger<IOutliningRegionTag>), out var outline))
+          {
+            outline.RaiseTagsChanged(span);
+          }
+
         }
       }
+
+      tableDataSink.AddSnapshot(_snapshot, true);
 
       if (TagsChanged != null)
       {

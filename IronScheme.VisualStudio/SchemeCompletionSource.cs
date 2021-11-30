@@ -51,11 +51,6 @@ namespace IronScheme.VisualStudio
       // You will likely use the parser of your language
       ITextStructureNavigator navigator = m_sourceProvider.NavigatorService.GetTextStructureNavigator(triggerLocation.Snapshot.TextBuffer);
       TextExtent extent = navigator.GetExtentOfWord(triggerLocation);
-      if (triggerLocation.Position > 0 && (!extent.IsSignificant || !extent.Span.GetText().Any(c => char.IsLetterOrDigit(c))))
-      {
-        // Improves span detection over the default ITextStructureNavigation result
-        extent = navigator.GetExtentOfWord(triggerLocation - 1);
-      }
 
       var tokenSpan = triggerLocation.Snapshot.CreateTrackingSpan(extent.Span, SpanTrackingMode.EdgeInclusive);
 
@@ -67,30 +62,7 @@ namespace IronScheme.VisualStudio
         return new SnapshotSpan(triggerLocation, 0);
       }
 
-      // Trim quotes and new line characters.
-      int startOffset = 0;
-      int endOffset = 0;
-
-      if (tokenText.Length > 0)
-      {
-        if (tokenText.StartsWith("\""))
-          startOffset = 1;
-      }
-      if (tokenText.Length - startOffset > 0)
-      {
-        if (tokenText.EndsWith("\"\r\n"))
-          endOffset = 3;
-        else if (tokenText.EndsWith("\r\n"))
-          endOffset = 2;
-        else if (tokenText.EndsWith("\"\n"))
-          endOffset = 2;
-        else if (tokenText.EndsWith("\n"))
-          endOffset = 1;
-        else if (tokenText.EndsWith("\""))
-          endOffset = 1;
-      }
-
-      return new SnapshotSpan(tokenSpan.GetStartPoint(snapshot) + startOffset, tokenSpan.GetEndPoint(snapshot) - endOffset);
+      return new SnapshotSpan(tokenSpan.GetStartPoint(snapshot), tokenSpan.GetEndPoint(snapshot));
     }
 
     public void Dispose()

@@ -91,7 +91,7 @@ namespace IronScheme.VisualStudio
     
     static HashSet<EventHandler> ConnectToBuffer(ITextBuffer buffer, int interval)
     {
-      buffer.Changed += BufferChanged;
+      buffer.ChangedLowPriority += BufferChanged;
 
       buffer.Properties[idleTimerInterval] = interval;
       RestartTimerForBuffer(buffer);
