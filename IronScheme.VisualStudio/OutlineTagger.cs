@@ -110,7 +110,7 @@ namespace IronScheme.VisualStudio
       var span = MakeSnapshotSpan(buffer.CurrentSnapshot, (string)((Cons)a.source).cdr);
       if (span.HasValue && span?.Start.GetContainingLine().LineNumber != span?.End.GetContainingLine().LineNumber)
       {
-        var header = span?.Start.GetContainingLine().GetText().Replace("\t","") + " ...";
+        var header = span?.Start.GetContainingLine().GetText().Trim() + " ...";
         yield return new TagSpan<IOutliningRegionTag>(span.Value, new OutliningRegionTag(header, span?.GetText().Replace("\t", " ")));
 
         if (a.expression is Cons cc)
