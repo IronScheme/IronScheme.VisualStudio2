@@ -23,11 +23,11 @@ Todo list
 [*] ErrorTagger
 [*] SmartIndent (need much better behavior)
 [*] Interactive window
-[ ] Outliner
+[*] Outliner
 [ ] Snippets
 [ ] Project support
 [ ] Editor options
-[ ] SignatureHelper
+[*] SignatureHelper
 [ ] DropDowns
 [ ] IEditorOperationsFactoryService
 [ ] Strip trailing whitespace on save
