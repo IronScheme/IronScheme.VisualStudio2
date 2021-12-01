@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using IronScheme.Runtime;
-using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.Text;
@@ -88,7 +84,7 @@ namespace IronScheme.VisualStudio
         if (v != BindingType.Record)
         {
           var icon = new ImageElement((v == BindingType.Procedure ? KnownMonikers.Method : KnownMonikers.Class).ToImageId());
-          items.Add(new CompletionItem(str, this, icon));// str, v.ToString(), v == BindingType.Procedure ? procedure_image : syntax_image, null));
+          items.Add(new CompletionItem(str, this, icon));
         }
       }
 

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using IronScheme.Compiler;
 using IronScheme.Runtime;
 using IronScheme.Scripting;
@@ -23,9 +22,8 @@ namespace IronScheme.VisualStudio.Errors
 
   class Square : SnapshotSpanPair { }
 
-  class ErrorTagger : ITagger<ErrorTag>, IDisposable
+  class ErrorTagger : BaseTagger, ITagger<ErrorTag>, IDisposable
   {
-
     ITagAggregator<SchemeTag> _aggregator;
     ITextBuffer _buffer;
     ITextDocument _document;
@@ -88,7 +86,7 @@ namespace IronScheme.VisualStudio.Errors
       }
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
       BufferIdleEventUtil.RemoveBufferIdleEventListener(_buffer, ReparseFile);
     }
@@ -224,11 +222,11 @@ namespace IronScheme.VisualStudio.Errors
             _buffer.Properties["SchemeBindings"] = prevbindings;
             var cond = ex.Condition;
             var error = "(get-error {0})".Eval<MultipleValues>(cond).ToArray(2);
-            var errtag = new ErrorTag(PredefinedErrorTypeNames.CompilerError, error[0]);
+            var errtag = new ErrorTag(PredefinedErrorTypeNames.SyntaxError, error[0]);
             var errspan = new SnapshotSpan(snapshot, 0, 0);
             if (error[1] is string)
             {
-              errspan = MakeSnapshotSpan(snapshot, error[1] as string);
+              errspan = MakeSnapshotSpan(snapshot, error[1] as string) ?? errspan;
               syntax_error = new TagSpan<ErrorTag>(errspan, errtag);
             }
             AddErrorTask(errspan, errtag);
@@ -271,34 +269,7 @@ namespace IronScheme.VisualStudio.Errors
 
       tableDataSink.AddSnapshot(_snapshot, true);
 
-      if (TagsChanged != null)
-      {
-        TagsChanged(this, new SnapshotSpanEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length)));
-      }
-    }
-
-    static readonly Regex LOCATIONMATCH = new Regex(
-      @"\((?<startline>\d+),(?<startcol>\d+)\)\s-\s\((?<endline>\d+),(?<endcol>\d+)\)",
-      RegexOptions.Compiled);
-
-    static SourceSpan ExtractLocation(string location)
-    {
-      var m = LOCATIONMATCH.Match(location);
-
-      return new SourceSpan(
-        new SourceLocation(0, Convert.ToInt32(m.Groups["startline"].Value), Convert.ToInt32(m.Groups["startcol"].Value)),
-        new SourceLocation(0, Convert.ToInt32(m.Groups["endline"].Value), Convert.ToInt32(m.Groups["endcol"].Value)));
-    }
-
-    SnapshotSpan MakeSnapshotSpan(ITextSnapshot snapshot, string location)
-    {
-      var lines = snapshot.Lines.ToArray();
-      var loc = ExtractLocation(location);
-
-      var start = lines[loc.Start.Line - 1].Start + (loc.Start.Column - 1);
-      var end = lines[loc.End.Line - 1].Start + (loc.End.Column - 1);
-
-      return new SnapshotSpan(start, end);
+      RaiseTagsChanged(new SnapshotSpan(snapshot, 0, snapshot.Length));
     }
 
     static BindingType GetBindingType(object x)
@@ -332,7 +303,5 @@ namespace IronScheme.VisualStudio.Errors
       _snapshot.Errors.Add(new TagSpan<ErrorTag>(span, tag));
 
     }
-
-    public event EventHandler<SnapshotSpanEventArgs> TagsChanged;
   }
 }

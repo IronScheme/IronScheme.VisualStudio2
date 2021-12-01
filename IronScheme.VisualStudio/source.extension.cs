@@ -11,7 +11,7 @@ namespace IronScheme.VisualStudio
         public const string Name = "IronScheme.VisualStudio";
         public const string Description = @"IronScheme editor extensions for Visual Studio";
         public const string Language = "en-US";
-        public const string Version = "1.999.0.46";
+        public const string Version = "1.999.0.47";
         public const string Author = "leppie";
         public const string Tags = "ironscheme";
     }

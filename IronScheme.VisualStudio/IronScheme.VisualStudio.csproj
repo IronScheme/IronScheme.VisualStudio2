@@ -86,6 +86,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseTagger.cs" />
+    <Compile Include="BraceCompletionDefaultProvider.cs" />
     <Compile Include="BraceMatchingTagger.cs" />
     <Compile Include="BufferIdleEventUtil.cs" />
     <Compile Include="ClassificationTagger.cs" />
@@ -104,6 +106,7 @@
       <DependentUpon>source.extension.vsixmanifest</DependentUpon>
     </Compile>
     <Compile Include="Errors\ErrorsSnapshot.cs" />
+    <Compile Include="StructureTagger.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\IronScheme.VisualStudio.REPL\bin\Debug\IronScheme.VisualStudio.REPL.pkgdef">

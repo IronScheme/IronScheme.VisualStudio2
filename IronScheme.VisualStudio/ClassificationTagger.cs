@@ -166,7 +166,7 @@ namespace IronScheme.VisualStudio
       {
         if (_schemeTokenTypes.ContainsKey(tagSpan.Tag.type))
         {
-          var tagSpans = tagSpan.Span.GetSpans(spans[0].Snapshot)[0];
+          var tagSpans = tagSpan.Span.GetSpans(_buffer.CurrentSnapshot)[0];
           if (tagSpan.Tag.type == Tokens.SYMBOL)
           {
             var text = tagSpans.GetText();
