@@ -117,8 +117,8 @@ namespace IronScheme.VisualStudio
 
         if (pair.Start.Contains(currentChar) || pair.End.Contains(currentChar))
         {
-          yield return new TagSpan<TextMarkerTag>(pair.Start, new TextMarkerTag("blue"));
-          yield return new TagSpan<TextMarkerTag>(pair.End, new TextMarkerTag("blue"));
+          yield return new TagSpan<TextMarkerTag>(pair.Start, new TextMarkerTag("brace matching"));
+          yield return new TagSpan<TextMarkerTag>(pair.End, new TextMarkerTag("brace matching"));
 
           break;
         }

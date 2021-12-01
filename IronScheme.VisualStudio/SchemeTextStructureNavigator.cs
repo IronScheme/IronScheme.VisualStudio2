@@ -146,7 +146,7 @@ namespace IronScheme.VisualStudio
     IEnumerable<ITagSpan<StructureTag>> GetTags(Annotation a, SnapshotSpan s)
     {
       var span = MakeSnapshotSpan(buffer.CurrentSnapshot, (string)((Cons)a.source).cdr);
-      if (span.HasValue && s.IntersectsWith(span.Value) && span?.Start.GetContainingLine().LineNumber != span?.End.GetContainingLine().LineNumber)
+      if (span.HasValue && s.OverlapsWith(span.Value) && span?.Start.GetContainingLine().LineNumber != span?.End.GetContainingLine().LineNumber)
       {
         var header = span?.Start.GetContainingLine().Extent;
         yield return new TagSpan<StructureTag>(span.Value, new StructureTag(buffer.CurrentSnapshot, span, header, type: PredefinedStructureTagTypes.Expression));
