@@ -87,18 +87,18 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseTagger.cs" />
-    <Compile Include="BraceCompletionDefaultProvider.cs" />
+    <Compile Include="BraceCompletionContextProvider.cs" />
     <Compile Include="BraceMatchingTagger.cs" />
     <Compile Include="BufferIdleEventUtil.cs" />
     <Compile Include="ClassificationTagger.cs" />
     <Compile Include="Errors\ErrorTagger.cs" />
     <Compile Include="Errors\ErrorTaggerProvider.cs" />
-    <Compile Include="QuickInfoSource.cs" />
-    <Compile Include="SchemeCompletionSource.cs" />
+    <Compile Include="AsyncTokenQuickInfoSource.cs" />
+    <Compile Include="AsyncCompletionSource.cs" />
     <Compile Include="SchemeTagger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="OutlineTagger.cs" />
-    <Compile Include="SchemeTextStructureNavigator.cs" />
+    <Compile Include="TextBufferExtensions.cs" />
+    <Compile Include="TextStructureNavigator.cs" />
     <Compile Include="SmartIndent.cs" />
     <Compile Include="source.extension.cs">
       <AutoGen>True</AutoGen>

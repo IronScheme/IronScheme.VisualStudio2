@@ -161,39 +161,41 @@ namespace IronScheme.VisualStudio
 
     public IEnumerable<ITagSpan<ClassificationTag>> GetTags(NormalizedSnapshotSpanCollection spans)
     {
-      var bindings = _buffer.Properties["SchemeBindings"] as Dictionary<string, BindingType>;
-      foreach (var tagSpan in this._aggregator.GetTags(spans))
+      if (_buffer.TryGetBindings(out var bindings))
       {
-        if (_schemeTokenTypes.ContainsKey(tagSpan.Tag.type))
+        foreach (var tagSpan in _aggregator.GetTags(spans))
         {
-          var tagSpans = tagSpan.Span.GetSpans(_buffer.CurrentSnapshot)[0];
-          if (tagSpan.Tag.type == Tokens.SYMBOL)
+          if (_schemeTokenTypes.ContainsKey(tagSpan.Tag.type))
           {
-            var text = tagSpans.GetText();
-            BindingType val;
-            if (bindings.TryGetValue(text, out val))
+            var tagSpans = tagSpan.Span.GetSpans(_buffer.CurrentSnapshot)[0];
+            if (tagSpan.Tag.type == Tokens.SYMBOL)
             {
-              switch ((val & ~BindingType.LocalMask))
+              var text = tagSpans.GetText();
+              BindingType val;
+              if (bindings.TryGetValue(text, out val))
               {
-                case BindingType.Syntax:
-                  yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(syntax));
-                  continue;
-                case BindingType.Procedure:
-                  yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(procedure));
-                  continue;
-                case BindingType.Record:
-                  yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(record));
-                  continue;
+                switch ((val & ~BindingType.LocalMask))
+                {
+                  case BindingType.Syntax:
+                    yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(syntax));
+                    continue;
+                  case BindingType.Procedure:
+                    yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(procedure));
+                    continue;
+                  case BindingType.Record:
+                    yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(record));
+                    continue;
+                }
+              }
+              if (library_keywords.Contains(text))
+              {
+                yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(syntax));
+                continue;
               }
             }
-            if (library_keywords.Contains(text))
-            {
-              yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(syntax));
-              continue;
-            }
+
+            yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(_schemeTokenTypes[tagSpan.Tag.type]));
           }
-          
-          yield return new TagSpan<ClassificationTag>(tagSpans, new ClassificationTag(_schemeTokenTypes[tagSpan.Tag.type]));
         }
       }
     }

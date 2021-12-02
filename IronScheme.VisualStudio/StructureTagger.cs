@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Linq;
 using IronScheme.Runtime;
 using IronScheme.Runtime.psyntax;
 using Microsoft.VisualStudio.Text;
@@ -55,11 +56,23 @@ namespace IronScheme.VisualStudio
         if (spans.IntersectsWith(span))
         {
           var startLine = span.Start.GetContainingLine();
+          var endLine = span.End.GetContainingLine();
 
-          if (startLine.LineNumber != span.End.GetContainingLine().LineNumber)
+          if (startLine.LineNumber != endLine.LineNumber)
           {
-            var header = new SnapshotSpan(span.Start, startLine.End);
-            yield return new TagSpan<StructureTag>(span, new StructureTag(buffer.CurrentSnapshot, span, header, type: PredefinedStructureTagTypes.Expression));
+            var headerSpan = new SnapshotSpan(span.Start, startLine.End);
+            var header = headerSpan.GetText() + " ... ";
+            header += new string(')', header.Count(x => x == '(') - header.Count(x => x == ')'));
+            header += new string(']', header.Count(x => x == '[') - header.Count(x => x == ']'));
+
+            var collapsable = Math.Abs(startLine.LineNumber - endLine.LineNumber) > 1;
+            var startOffset = span.Start - startLine.Start;
+            var endOffset = endLine.End - span.End;
+            var collapseHint = new SnapshotSpan(startLine.Start, endLine.End).GetText();
+            collapseHint = new string(' ', startOffset) + collapseHint.Substring(startOffset, collapseHint.Length - startOffset - endOffset) + new string(' ', endOffset);
+
+            yield return new TagSpan<StructureTag>(span, 
+              new StructureTag(buffer.CurrentSnapshot, span, headerSpan, type: PredefinedStructureTagTypes.Expression, isCollapsible: true, collapsedForm: header, collapsedHintForm: collapseHint));
 
             if (a.expression is Cons cc)
             {
@@ -75,7 +88,7 @@ namespace IronScheme.VisualStudio
 
     public IEnumerable<ITagSpan<StructureTag>> GetTags(NormalizedSnapshotSpanCollection spans)
     {
-      if (buffer.Properties.TryGetProperty<object>("Result", out var result))
+      if (buffer.TryGetResult(out var result))
       {
         if (result is Cons c)
         {

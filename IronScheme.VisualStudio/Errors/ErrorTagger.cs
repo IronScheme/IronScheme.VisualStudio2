@@ -173,10 +173,14 @@ namespace IronScheme.VisualStudio.Errors
       {
         var port = new TextSnapshotToTextReader(snapshot);
 
-        _buffer.Properties.TryGetProperty("SchemeBindings", out object prevbindings);
+        _buffer.TryGetBindings(out var prevbindings);
         {
           try
           {
+            _buffer.Properties.RemoveProperty("Result");
+            _buffer.Properties.RemoveProperty("SchemeBindings");
+            _buffer.Properties.RemoveProperty("SchemeEnvironment");
+
             var result = "(read-file {0})".Eval(port);
 
             if (result == null)
@@ -219,14 +223,17 @@ namespace IronScheme.VisualStudio.Errors
           }
           catch (SchemeException ex)
           {
-            _buffer.Properties["SchemeBindings"] = prevbindings;
-            var cond = ex.Condition;
-            var error = "(get-error {0})".Eval<MultipleValues>(cond).ToArray(2);
-            var errtag = new ErrorTag(PredefinedErrorTypeNames.SyntaxError, error[0]);
-            var errspan = new SnapshotSpan(snapshot, 0, 0);
-            if (error[1] is string)
+            if (!_buffer.Properties.ContainsProperty("SchemeBindings"))
             {
-              errspan = MakeSnapshotSpan(snapshot, error[1] as string) ?? errspan;
+              _buffer.Properties["SchemeBindings"] = prevbindings;
+            }
+            var cond = ex.Condition;
+            var loc = "(get-error-location {0})".Eval(cond);
+            var errtag = new ErrorTag(PredefinedErrorTypeNames.SyntaxError, ex.ToString());
+            var errspan = new SnapshotSpan(snapshot, 0, 0);
+            if (loc is string l)
+            {
+              errspan = MakeSnapshotSpan(snapshot, l) ?? errspan;
               syntax_error = new TagSpan<ErrorTag>(errspan, errtag);
             }
             AddErrorTask(errspan, errtag);
@@ -234,7 +241,10 @@ namespace IronScheme.VisualStudio.Errors
           }
           catch (Exception ex)
           {
-            _buffer.Properties["SchemeBindings"] = prevbindings;
+            if (!_buffer.Properties.ContainsProperty("SchemeBindings"))
+            {
+              _buffer.Properties["SchemeBindings"] = prevbindings;
+            }
             var errtag = new ErrorTag(PredefinedErrorTypeNames.CompilerError, ex.ToString());
             var errspan = new SnapshotSpan(snapshot, 0, 0);
 
@@ -258,12 +268,6 @@ namespace IronScheme.VisualStudio.Errors
           {
             structure.RaiseTagsChanged(span);
           }
-
-          if (_buffer.Properties.TryGetProperty<OutlineTagger>(typeof(ITagger<IOutliningRegionTag>), out var outline))
-          {
-            outline.RaiseTagsChanged(span);
-          }
-
         }
       }
 

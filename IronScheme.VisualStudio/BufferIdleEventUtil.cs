@@ -79,7 +79,7 @@ namespace IronScheme.VisualStudio
 
     static void DisconnectFromBuffer(ITextBuffer buffer)
     {
-      buffer.Changed -= BufferChanged;
+      buffer.ChangedLowPriority -= BufferChanged;
 
       ClearBufferListeners(buffer);
       ClearBufferTimer(buffer);

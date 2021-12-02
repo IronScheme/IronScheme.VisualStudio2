@@ -1,11 +1,16 @@
-﻿(library (visualstudio)
+﻿; License
+; Copyright (c) 2007-2016 Llewellyn Pritchard
+; All rights reserved.
+; This source code is subject to terms and conditions of the BSD License.
+
+(library (visualstudio)
   (export
     parse-repl 
     run-expansion
     read-file
     get-forms
     read-imports
-    get-error)
+    get-error-location)
   (import 
     (ironscheme)
     (ironscheme reader))
@@ -15,10 +20,10 @@
                   (string-append "(begin "
                                  text
                                  "\n)"))))
-      (let ((expr (read port)))
+      (let ((expr (read port))) 
         (if (eof-object? expr)
-            #f
-            expr))))
+            #f 
+            expr)))) 
  
   (define (read-definitions subst env invoke-code)
     (let ((lookup (make-eq-hashtable))
@@ -65,8 +70,8 @@
   (define (condition-location conds)
     (exists get-location (simple-conditions conds)))
 
-  (define (get-error conds)
-    (values (condition-message conds) (condition-location conds)))
+  (define (get-error-location conds)
+    (condition-location conds))
 
   (define (get-forms proc name)
     (let-values (((p e) (open-string-output-port)))

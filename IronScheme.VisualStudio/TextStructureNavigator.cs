@@ -9,23 +9,23 @@ namespace IronScheme.VisualStudio
 {
   [Export(typeof(ITextStructureNavigatorProvider))]
   [ContentType("scheme")]
-  internal class SchemeTextStructureNavigatorProvider : ITextStructureNavigatorProvider
+  internal class TextStructureNavigatorProvider : ITextStructureNavigatorProvider
   {
     [Import]
     internal IBufferTagAggregatorFactoryService BufferTagAggregatorFactoryService = null;
 
     public ITextStructureNavigator CreateTextStructureNavigator(ITextBuffer textBuffer)
     {
-      return textBuffer.Properties.GetOrCreateSingletonProperty(() => new SchemeTextStructureNavigator(textBuffer, BufferTagAggregatorFactoryService));
+      return textBuffer.Properties.GetOrCreateSingletonProperty(() => new TextStructureNavigator(textBuffer, BufferTagAggregatorFactoryService));
     }
   }
 
-  class SchemeTextStructureNavigator : ITextStructureNavigator
+  class TextStructureNavigator : ITextStructureNavigator
   {
     private ITextBuffer textBuffer;
     private readonly ITagAggregator<SchemeTag> aggregator;
 
-    public SchemeTextStructureNavigator(ITextBuffer textBuffer, IBufferTagAggregatorFactoryService aggregatorFactory)
+    public TextStructureNavigator(ITextBuffer textBuffer, IBufferTagAggregatorFactoryService aggregatorFactory)
     {
       this.textBuffer = textBuffer;
       aggregator = aggregatorFactory.CreateTagAggregator<SchemeTag>(textBuffer);
@@ -35,13 +35,15 @@ namespace IronScheme.VisualStudio
 
     public TextExtent GetExtentOfWord(SnapshotPoint currentPosition)
     {
-      foreach(var tag in aggregator.GetTags(new SnapshotSpan(currentPosition,0)))
+      var span = new SnapshotSpan(currentPosition, 0);
+
+      foreach (var tag in aggregator.GetTags(span))
       {
         SnapshotSpan tagSpan = tag.Span.GetSpans(textBuffer).First();
         return new TextExtent(tagSpan, true);
       }
 
-      return new TextExtent();
+      return new TextExtent(span, false);
     }
 
     public SnapshotSpan GetSpanOfEnclosing(SnapshotSpan activeSpan) => activeSpan;
