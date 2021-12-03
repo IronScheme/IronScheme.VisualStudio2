@@ -120,6 +120,8 @@ namespace IronScheme.VisualStudio
       options.SetOptionValue(DefaultOptions.ConvertTabsToSpacesOptionId, true);
       options.SetOptionValue(DefaultOptions.IndentSizeOptionId, 2);
       options.SetOptionValue(DefaultOptions.TabSizeOptionId, 2);
+      options.SetOptionValue(DefaultOptions.TrimTrailingWhiteSpaceOptionId, true);
+      
       options.SetOptionValue(DefaultTextViewHostOptions.LineNumberMarginId, true);
 
       _aggregator = aggregatorFactory.CreateTagAggregator<SchemeTag>(buffer);
@@ -171,8 +173,7 @@ namespace IronScheme.VisualStudio
             if (tagSpan.Tag.type == Tokens.SYMBOL)
             {
               var text = tagSpans.GetText();
-              BindingType val;
-              if (bindings.TryGetValue(text, out val))
+              if (bindings.TryGetValue(text, out var val))
               {
                 switch ((val & ~BindingType.LocalMask))
                 {

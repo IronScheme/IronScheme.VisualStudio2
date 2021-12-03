@@ -66,7 +66,7 @@ namespace IronScheme.VisualStudio.Errors
         {
           syntax_error = null;
         }
-        else if (syntax_error.Span.OverlapsWith(spans[0]))
+        else if (syntax_error.Span.IntersectsWith(spans[0]))
         {
           yield return syntax_error;
         }
@@ -79,7 +79,7 @@ namespace IronScheme.VisualStudio.Errors
           brace_errors.Clear();
           break;
         }
-        else if (err.Span.OverlapsWith(spans[0]))
+        else if (err.Span.IntersectsWith(spans[0]))
         {
           yield return err;
         }

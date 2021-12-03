@@ -22,7 +22,8 @@ namespace IronScheme.VisualStudio
     public IAsyncQuickInfoSource TryCreateQuickInfoSource(ITextBuffer textBuffer)
     {
       return textBuffer.Properties.GetOrCreateSingletonProperty(
-        () => new AsyncTokenQuickInfoSource(textBuffer, aggService.CreateTagAggregator<SchemeTag>(textBuffer)));
+        () => new AsyncTokenQuickInfoSource(textBuffer, 
+                aggService.CreateTagAggregator<SchemeTag>(textBuffer)));
     }
   }
 
@@ -82,7 +83,7 @@ namespace IronScheme.VisualStudio
             }
           }
         }
-      }
+      }      
 
       return Task.FromResult<QuickInfoItem>(null);
     }
