@@ -201,10 +201,11 @@ namespace IronScheme.VisualStudio.Errors
 
             _buffer.Properties["SchemeBindings"] = bindings;
 
-            var expanded = "(run-expansion {0})".Eval<MultipleValues>(result).ToArray(3);
+            var expanded = "(run-expansion {0})".Eval<MultipleValues>(result).ToArray(4);
             var names = expanded[0] as object[];
             var types = expanded[1] as object[];
             var output = expanded[2];
+            var exports = expanded[3];
 
             for (var i = 0; i < names.Length; i++)
             {

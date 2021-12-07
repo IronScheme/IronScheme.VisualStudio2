@@ -78,13 +78,17 @@ namespace IronScheme.VisualStudio
 
             yield return new TagSpan<StructureTag>(span,
               new StructureTag(buffer.CurrentSnapshot, span, headerSpan, type: PredefinedStructureTagTypes.Expression, isCollapsible: true, collapsedForm: header, collapsedHintForm: collapseHint));
+          }
+          else
+          {
+            yield return new TagSpan<StructureTag>(span, new StructureTag(buffer.CurrentSnapshot, span, type: PredefinedStructureTagTypes.Nonstructural));
+          }
 
-            if (a.expression is Cons cc)
+          if (a.expression is Cons cc)
+          {
+            foreach (var item in GetTags(cc, spans))
             {
-              foreach (var item in GetTags(cc, spans))
-              {
-                yield return item;
-              }
+              yield return item;
             }
           }
         }

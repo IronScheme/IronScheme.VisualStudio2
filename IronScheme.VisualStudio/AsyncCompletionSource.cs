@@ -66,7 +66,7 @@ namespace IronScheme.VisualStudio
 
     }
 
-    Dictionary<string, BindingType> cache = new Dictionary<string, BindingType>();
+    Dictionary<string, BindingType> cache;
 
     public async Task<CompletionContext> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerLocation, SnapshotSpan applicableToSpan, CancellationToken token)
     {
