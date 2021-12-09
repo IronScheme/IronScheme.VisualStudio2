@@ -91,6 +91,7 @@
     <Compile Include="BraceMatchingTagger.cs" />
     <Compile Include="BufferIdleEventUtil.cs" />
     <Compile Include="ClassificationTagger.cs" />
+    <Compile Include="Shell.cs" />
     <Compile Include="Errors\ErrorTagger.cs" />
     <Compile Include="Errors\ErrorTaggerProvider.cs" />
     <Compile Include="AsyncTokenQuickInfoSource.cs" />
@@ -107,6 +108,7 @@
     </Compile>
     <Compile Include="Errors\ErrorsSnapshot.cs" />
     <Compile Include="StructureTagger.cs" />
+    <Compile Include="TextViewCreationListener.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\IronScheme.VisualStudio.REPL\bin\Debug\IronScheme.VisualStudio.REPL.pkgdef">

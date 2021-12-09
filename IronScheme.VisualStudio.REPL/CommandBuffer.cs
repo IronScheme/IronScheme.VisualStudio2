@@ -61,6 +61,7 @@ namespace IronScheme.VisualStudio.REPL
                             output.Flush();
                             if (!Builtins.IsTrue(Builtins.IsUnspecified(result)))
                             {
+                                // todo: use pretty-print instead
                                 var fmt = "(format \"~s\" {0})".Eval<string>(result);
                                 Write(fmt + System.Environment.NewLine);
                             }
