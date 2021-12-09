@@ -11,152 +11,152 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace IronScheme.VisualStudio
 {
-  [Export(typeof(ITaggerProvider))]
-  [ContentType("scheme")]
-  [TagType(typeof(StructureTag))]
-  internal class StructureTaggerProvider : ITaggerProvider
-  {
-    [Import]
-    IBufferTagAggregatorFactoryService aggService = null;
-
-    public ITagger<T> CreateTagger<T>(ITextBuffer buffer) where T : ITag
+    [Export(typeof(ITaggerProvider))]
+    [ContentType("scheme")]
+    [TagType(typeof(StructureTag))]
+    internal class StructureTaggerProvider : ITaggerProvider
     {
-      return buffer.Properties.GetOrCreateSingletonProperty(
-        () => new StructureTagger(buffer, aggService.CreateTagAggregator<SchemeTag>(buffer)) as ITagger<T>);
-    }
-  }
+        [Import]
+        IBufferTagAggregatorFactoryService aggService = null;
 
-  class StructureTagger : BaseTagger, ITagger<StructureTag>, IDisposable
-  {
-    private ITextBuffer buffer;
-    private readonly ITagAggregator<SchemeTag> tagAggregator;
-
-    public StructureTagger(ITextBuffer buffer, ITagAggregator<SchemeTag> tagAggregator)
-    {
-      this.buffer = buffer;
-      this.tagAggregator = tagAggregator;
-    }
-
-    IEnumerable<ITagSpan<StructureTag>> GetTags(Cons c, NormalizedSnapshotSpanCollection spans)
-    {
-      foreach (var item in c)
-      {
-        if (item is Annotation a)
+        public ITagger<T> CreateTagger<T>(ITextBuffer buffer) where T : ITag
         {
-          foreach (var item2 in GetTags(a, spans))
-          {
-            yield return item2;
-          }
+            return buffer.Properties.GetOrCreateSingletonProperty(
+              () => new StructureTagger(buffer, aggService.CreateTagAggregator<SchemeTag>(buffer)) as ITagger<T>);
         }
-      }
     }
 
-    IEnumerable<ITagSpan<StructureTag>> GetTags(Annotation a, NormalizedSnapshotSpanCollection spans)
+    class StructureTagger : BaseTagger, ITagger<StructureTag>, IDisposable
     {
-      var maybeSpan = MakeSnapshotSpan(buffer.CurrentSnapshot, (string)((Cons)a.source).cdr);
-      if (maybeSpan.HasValue)
-      {
-        var span = maybeSpan.Value;
+        private ITextBuffer buffer;
+        private readonly ITagAggregator<SchemeTag> tagAggregator;
 
-        if (spans.IntersectsWith(span))
+        public StructureTagger(ITextBuffer buffer, ITagAggregator<SchemeTag> tagAggregator)
         {
-          var startLine = span.Start.GetContainingLine();
-          var endLine = span.End.GetContainingLine();
+            this.buffer = buffer;
+            this.tagAggregator = tagAggregator;
+        }
 
-          if (startLine.LineNumber != endLine.LineNumber)
-          {
-            var headerSpan = new SnapshotSpan(span.Start, startLine.End);
-            var header = headerSpan.GetText() + " ... ";
-            header += new string(')', header.Count(x => x == '(') - header.Count(x => x == ')'));
-            header += new string(']', header.Count(x => x == '[') - header.Count(x => x == ']'));
-
-            var collapsable = Math.Abs(startLine.LineNumber - endLine.LineNumber) > 1;
-            var startOffset = span.Start - startLine.Start;
-            var endOffset = endLine.End - span.End;
-            var collapseHint = new SnapshotSpan(startLine.Start, endLine.End).GetText();
-            collapseHint = new string(' ', startOffset) + collapseHint.Substring(startOffset, collapseHint.Length - startOffset - endOffset) + new string(' ', endOffset);
-
-            yield return new TagSpan<StructureTag>(span,
-              new StructureTag(buffer.CurrentSnapshot, span, headerSpan, type: PredefinedStructureTagTypes.Expression, isCollapsible: true, collapsedForm: header, collapsedHintForm: collapseHint));
-          }
-          else
-          {
-            yield return new TagSpan<StructureTag>(span, new StructureTag(buffer.CurrentSnapshot, span, type: PredefinedStructureTagTypes.Nonstructural));
-          }
-
-          if (a.expression is Cons cc)
-          {
-            foreach (var item in GetTags(cc, spans))
+        IEnumerable<ITagSpan<StructureTag>> GetTags(Cons c, NormalizedSnapshotSpanCollection spans)
+        {
+            foreach (var item in c)
             {
-              yield return item;
+                if (item is Annotation a)
+                {
+                    foreach (var item2 in GetTags(a, spans))
+                    {
+                        yield return item2;
+                    }
+                }
             }
-          }
-        }
-      }
-    }
-
-    public IEnumerable<ITagSpan<StructureTag>> GetTags(NormalizedSnapshotSpanCollection spans)
-    {
-      if (buffer.TryGetResult(out var result))
-      {
-        if (result is Cons c)
-        {
-          foreach (var item in GetTags(c, spans))
-          {
-            yield return item;
-          }
-        }
-        else if (result is Annotation a)
-        {
-          foreach (var item in GetTags(a, spans))
-          {
-            yield return item;
-          }
-        }
-      }
-
-      var lines = 0;
-      IMappingTagSpan<SchemeTag> start = null, last = null;
-
-      foreach (var tag in this.tagAggregator.GetTags(new SnapshotSpan(buffer.CurrentSnapshot, 0, buffer.CurrentSnapshot.Length)))
-      {
-        if (tag.Tag.type == Compiler.Tokens.COMMENT)
-        {
-          if (start == null)
-          {
-            start = tag;
-          }
-          lines++;
-          last = tag;
-          continue;
         }
 
-        if (start != null)
+        IEnumerable<ITagSpan<StructureTag>> GetTags(Annotation a, NormalizedSnapshotSpanCollection spans)
         {
-          if (lines > 2)
-          {
-            var ss = start.Span.GetSpans(buffer).First();
-            var tt = last.Span.GetSpans(buffer).First();
-            var cc = new SnapshotSpan(ss.Start, tt.End);
-
-            lines = 0;
-
-            if (spans.IntersectsWith(cc))
+            var maybeSpan = MakeSnapshotSpan(buffer.CurrentSnapshot, (string)((Cons)a.source).cdr);
+            if (maybeSpan.HasValue)
             {
+                var span = maybeSpan.Value;
 
-              var header = ss.Start.GetContainingLine();
-              var headerText = header.GetText();
-              var headerSpan = new SnapshotSpan(ss.Start, header.End);
+                if (spans.IntersectsWith(span))
+                {
+                    var startLine = span.Start.GetContainingLine();
+                    var endLine = span.End.GetContainingLine();
 
-              yield return new TagSpan<StructureTag>(cc, 
-                new StructureTag(buffer.CurrentSnapshot, cc, headerSpan, type: PredefinedStructureTagTypes.Comment, isCollapsible: true, collapsedForm: headerText, collapsedHintForm: cc.GetText()));
+                    if (startLine.LineNumber != endLine.LineNumber)
+                    {
+                        var headerSpan = new SnapshotSpan(span.Start, startLine.End);
+                        var header = headerSpan.GetText() + " ... ";
+                        header += new string(')', header.Count(x => x == '(') - header.Count(x => x == ')'));
+                        header += new string(']', header.Count(x => x == '[') - header.Count(x => x == ']'));
+
+                        var collapsable = Math.Abs(startLine.LineNumber - endLine.LineNumber) > 1;
+                        var startOffset = span.Start - startLine.Start;
+                        var endOffset = endLine.End - span.End;
+                        var collapseHint = new SnapshotSpan(startLine.Start, endLine.End).GetText();
+                        collapseHint = new string(' ', startOffset) + collapseHint.Substring(startOffset, collapseHint.Length - startOffset - endOffset) + new string(' ', endOffset);
+
+                        yield return new TagSpan<StructureTag>(span,
+                          new StructureTag(buffer.CurrentSnapshot, span, headerSpan, type: PredefinedStructureTagTypes.Expression, isCollapsible: true, collapsedForm: header, collapsedHintForm: collapseHint));
+                    }
+                    else
+                    {
+                        yield return new TagSpan<StructureTag>(span, new StructureTag(buffer.CurrentSnapshot, span, type: PredefinedStructureTagTypes.Nonstructural));
+                    }
+
+                    if (a.expression is Cons cc)
+                    {
+                        foreach (var item in GetTags(cc, spans))
+                        {
+                            yield return item;
+                        }
+                    }
+                }
             }
-          }
-
-          start = null;
-          last = tag;
         }
-      }
+
+        public IEnumerable<ITagSpan<StructureTag>> GetTags(NormalizedSnapshotSpanCollection spans)
+        {
+            if (buffer.TryGetResult(out var result))
+            {
+                if (result is Cons c)
+                {
+                    foreach (var item in GetTags(c, spans))
+                    {
+                        yield return item;
+                    }
+                }
+                else if (result is Annotation a)
+                {
+                    foreach (var item in GetTags(a, spans))
+                    {
+                        yield return item;
+                    }
+                }
+            }
+
+            var lines = 0;
+            IMappingTagSpan<SchemeTag> start = null, last = null;
+
+            foreach (var tag in this.tagAggregator.GetTags(new SnapshotSpan(buffer.CurrentSnapshot, 0, buffer.CurrentSnapshot.Length)))
+            {
+                if (tag.Tag.type == Compiler.Tokens.COMMENT)
+                {
+                    if (start == null)
+                    {
+                        start = tag;
+                    }
+                    lines++;
+                    last = tag;
+                    continue;
+                }
+
+                if (start != null)
+                {
+                    if (lines > 2)
+                    {
+                        var ss = start.Span.GetSpans(buffer).First();
+                        var tt = last.Span.GetSpans(buffer).First();
+                        var cc = new SnapshotSpan(ss.Start, tt.End);
+
+                        lines = 0;
+
+                        if (spans.IntersectsWith(cc))
+                        {
+
+                            var header = ss.Start.GetContainingLine();
+                            var headerText = header.GetText();
+                            var headerSpan = new SnapshotSpan(ss.Start, header.End);
+
+                            yield return new TagSpan<StructureTag>(cc,
+                              new StructureTag(buffer.CurrentSnapshot, cc, headerSpan, type: PredefinedStructureTagTypes.Comment, isCollapsible: true, collapsedForm: headerText, collapsedHintForm: cc.GetText()));
+                        }
+                    }
+
+                    start = null;
+                    last = tag;
+                }
+            }
+        }
     }
-  }
 }

@@ -6,42 +6,42 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace IronScheme.VisualStudio
 {
-  [BracePair('(', ')')]
-  [BracePair('[', ']')]
-  [BracePair('"', '"')]
-  [ContentType("scheme")]
-  [Export(typeof(IBraceCompletionContextProvider))]
-  class BraceCompletionContextProvider : IBraceCompletionContextProvider
-  {
-    public bool TryCreateContext(ITextView textView, SnapshotPoint openingPoint, char openingBrace, char closingBrace, out IBraceCompletionContext context)
+    [BracePair('(', ')')]
+    [BracePair('[', ']')]
+    [BracePair('"', '"')]
+    [ContentType("scheme")]
+    [Export(typeof(IBraceCompletionContextProvider))]
+    class BraceCompletionContextProvider : IBraceCompletionContextProvider
     {
-      context = new BraceCompletionContext();
-      return true;
-    }
-  }
-
-  class BraceCompletionContext : IBraceCompletionContext
-  {
-    public bool AllowOverType(IBraceCompletionSession session)
-    {
-      return true;
+        public bool TryCreateContext(ITextView textView, SnapshotPoint openingPoint, char openingBrace, char closingBrace, out IBraceCompletionContext context)
+        {
+            context = new BraceCompletionContext();
+            return true;
+        }
     }
 
-    public void Finish(IBraceCompletionSession session)
+    class BraceCompletionContext : IBraceCompletionContext
     {
-      
-    }
+        public bool AllowOverType(IBraceCompletionSession session)
+        {
+            return true;
+        }
 
-    public void OnReturn(IBraceCompletionSession session)
-    {
-      
-    }
+        public void Finish(IBraceCompletionSession session)
+        {
 
-    public void Start(IBraceCompletionSession session)
-    {
-      
+        }
+
+        public void OnReturn(IBraceCompletionSession session)
+        {
+
+        }
+
+        public void Start(IBraceCompletionSession session)
+        {
+
+        }
     }
-  }
 
 
 }

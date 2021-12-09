@@ -135,10 +135,10 @@
       <Generator>VsixManifestGenerator</Generator>
       <LastGenOutput>source.extension.cs</LastGenOutput>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Resources\CodeField.png" />
-    <EmbeddedResource Include="Resources\CodeMethod.png" />
+    <Content Include="editor.sls">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IronScheme.VisualStudio.Common\IronScheme.VisualStudio.Common.csproj">

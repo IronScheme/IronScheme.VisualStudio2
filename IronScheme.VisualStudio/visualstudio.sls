@@ -87,4 +87,5 @@
         (let-values (((imp* b*) (parse-top-level-program content)))
           imp*)))
 
-  (allow-library-redefinition #t))
+  (allow-library-redefinition #t)
+  (debug-mode? #t))

@@ -1,53 +1,42 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 using System.Windows.Forms;
 using IronScheme.Runtime;
 using Microsoft.VisualStudio.PlatformUI;
 
 namespace IronScheme.VisualStudio.Common
 {
-  public static class Initialization
-  {
-    public static readonly bool Complete = Initialize();
-
-    static bool Initialize()
+    public static class Initialization
     {
-      var ap = AppDomain.CurrentDomain;//.Load("");
-      "(library-path (list {0}))".Eval(Builtins.ApplicationDirectory);
+        public static readonly bool Complete = Initialize();
 
-      var cfgpath = Path.Combine(Builtins.ApplicationDirectory, "../config.ss");
-
-      if (!File.Exists(cfgpath))
-      {
-        var result = MessageDialog.Show("Missing config.ss", new FileInfo(cfgpath).FullName, MessageDialogCommandSet.Ok);
-        
-        var bfd = new FolderBrowserDialog();
-        if (bfd.ShowDialog() == DialogResult.OK)
+        static bool Initialize()
         {
-          File.WriteAllText(cfgpath, string.Format(@"
+            "(library-path (list {0}))".Eval(Builtins.ApplicationDirectory);
+
+            var cfgpath = Path.Combine(Builtins.ApplicationDirectory, "../config.ss");
+
+            if (!File.Exists(cfgpath))
+            {
+                var result = MessageDialog.Show("Missing config.ss", new FileInfo(cfgpath).FullName, MessageDialogCommandSet.Ok);
+
+                var bfd = new FolderBrowserDialog();
+                if (bfd.ShowDialog() == DialogResult.OK)
+                {
+                    File.WriteAllText(cfgpath, string.Format(@"
 (library-path 
   (append (library-path) 
           (list ""{0}"")))", bfd.SelectedPath.Replace("\\", "/")));
+                }
+            }
+
+            if (File.Exists(cfgpath))
+            {
+                string.Format("(include \"{0}\")", cfgpath.Replace('\\', '/')).Eval();
+            }
+
+            "(import (visualstudio))".Eval();
+
+            return true;
         }
-      }
-
-      if (File.Exists(cfgpath))
-      {
-        string.Format("(include \"{0}\")", cfgpath.Replace('\\', '/')).Eval();
-      }
-#if DEBUG
-      "(debug-mode? #t)".Eval();
-#endif
-      "(import (visualstudio))".Eval();
-#if DEBUG
-     // "(compile)".Eval();
-#endif
-
-      return true;
     }
-  }
 }
