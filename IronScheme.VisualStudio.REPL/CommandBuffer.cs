@@ -20,6 +20,7 @@ namespace IronScheme.VisualStudio.REPL
 
         StringBuilder textSoFar;
         Stream textBufferStream;
+        object env;
 
         public CommandBuffer(Stream textBufferStream)
         {
@@ -32,6 +33,11 @@ namespace IronScheme.VisualStudio.REPL
 
         public void Add(string text)
         {
+            if (env is null)
+            {
+                env = "(new-interaction-environment)".Eval();
+            }
+
             // This function is called to add a line, so write a new line delimeter to the output.
             Write(System.Environment.NewLine);
 
@@ -57,7 +63,7 @@ namespace IronScheme.VisualStudio.REPL
                         try
                         {
                             var output = new System.IO.StreamWriter(textBufferStream);
-                            var result = "(parameterize [(current-output-port {1})] (eval {0} (interaction-environment)))".Eval(expr, output);
+                            var result = "(parameterize [(current-output-port {1})] (eval {0} {2}))".Eval(expr, output, env);
                             output.Flush();
                             if (!Builtins.IsTrue(Builtins.IsUnspecified(result)))
                             {

@@ -128,6 +128,8 @@ namespace IronScheme.VisualStudio.REPL
             var options = adapterFactory.GetWpfTextView(textView).Options;
             options.SetOptionValue(DefaultTextViewHostOptions.LineNumberMarginId, false);
             options.SetOptionValue(DefaultTextViewOptions.AutoScrollId, true);
+            options.SetOptionValue(DefaultTextViewOptions.WordWrapStyleId, WordWrapStyles.AutoIndent);
+
 
             adapterFactory.GetWpfTextView(textView).Caret.MoveTo(new SnapshotPoint(mefTextBuffer.CurrentSnapshot, mefTextBuffer.CurrentSnapshot.Length));
 

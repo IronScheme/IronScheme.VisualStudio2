@@ -272,7 +272,7 @@ namespace IronScheme.VisualStudio.Errors
                 }
             }
 
-            tableDataSink.AddSnapshot(_snapshot, true);
+            tableDataSink?.AddSnapshot(_snapshot, true);
 
             RaiseTagsChanged(new SnapshotSpan(snapshot, 0, snapshot.Length));
         }

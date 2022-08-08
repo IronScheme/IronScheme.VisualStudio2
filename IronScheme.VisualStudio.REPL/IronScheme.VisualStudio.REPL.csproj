@@ -101,12 +101,14 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Shell.cs" />
     <Compile Include="source.extension.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>source.extension.vsixmanifest</DependentUpon>
     </Compile>
     <Compile Include="TextBufferStream.cs" />
+    <Compile Include="TextViewCreationListener.cs" />
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="SchemeConsole.vsct">
@@ -119,6 +121,11 @@
     <Content Include="Resources\Package.ico" />
     <Content Include="..\IronScheme.VisualStudio\visualstudio.sls">
       <Link>visualstudio.sls</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="..\IronScheme.VisualStudio\editor.sls">
+      <Link>editor.sls</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
