@@ -127,7 +127,15 @@ namespace IronScheme.VisualStudio
                     {
                         foreach (var handler in handlers)
                         {
-                            handler(buffer, new EventArgs());
+                            try
+                            {
+                                handler(buffer, new EventArgs());
+                            }
+                            catch (Exception ex)
+                            {
+                                //TODO: find better way to log/report error
+                                System.Diagnostics.Trace.TraceError(ex.ToString());
+                            }
                         }
                     }
                 };
